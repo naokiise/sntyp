@@ -758,17 +758,6 @@
         </div>
         <div class="slider-group">
           <div class="slider-header">
-            <label>Kerning Mode</label>
-            <span class="slider-val" id="kerning-mode-val">Manual</span>
-          </div>
-          <select id="kerningModeSelect" aria-label="Kerning Mode">
-            <option value="manual" selected>Manual (Speed)</option>
-            <option value="optical">Optical (Visual)</option>
-            <option value="combined">Combined</option>
-          </select>
-        </div>
-        <div class="slider-group">
-          <div class="slider-header">
             <label>Kerning = Speed</label>
             <span class="slider-val" id="kerning-val">-4 (138 BPM)</span>
           </div>
@@ -920,7 +909,7 @@
     let lastClockTime = '';
     let gradationMode = 'off';
     let showMetrics = true;
-    let kerningMode = 'manual';
+    let kerningMode = 'optical';
 
     function updateFillState(active) {
       showFill = !!active;
@@ -5519,7 +5508,7 @@
             const cfs = getCharFontSize(dl.chars[i], FONT_SIZE);
             x1 += dl.glyphs[i].advanceWidth * (cfs / (font ? font.unitsPerEm : 1000));
             if (kerningEnabled) {
-              x1 += (dl.chars[i] ? (dl.chars[i].kerning || 0) : 0) + globalKerning;
+              x1 += (dl.chars[i] ? (dl.chars[i].kerning || 0) : 0) + getEffectiveKerning(i > 0 && dl.chars[i - 1] ? dl.chars[i - 1].char : null, dl.chars[i] ? dl.chars[i].char : null, globalKerning);
             }
           }
           ctx.fillRect(x0 - 2, top, x1 - x0 + 4, bottom - top);
@@ -5556,7 +5545,7 @@
             const cfs = getCharFontSize(cursorDisplayLine.chars[i], FONT_SIZE);
             curX += cursorDisplayLine.glyphs[i].advanceWidth * (cfs / (lFont ? lFont.unitsPerEm : 1000));
             if (kerningEnabled) {
-              curX += (cursorDisplayLine.chars[i] ? (cursorDisplayLine.chars[i].kerning || 0) : 0) + globalKerning;
+              curX += (cursorDisplayLine.chars[i] ? (cursorDisplayLine.chars[i].kerning || 0) : 0) + getEffectiveKerning(i > 0 && cursorDisplayLine.chars[i - 1] ? cursorDisplayLine.chars[i - 1].char : null, cursorDisplayLine.chars[i] ? cursorDisplayLine.chars[i].char : null, globalKerning);
             }
           }
         }
