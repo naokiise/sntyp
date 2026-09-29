@@ -4977,6 +4977,9 @@
       if (!isFinite(xMin)) return;
       const cx = (xMin + xMax) / 2, cy = (yMin + yMax) / 2;
       const r0 = Math.max(1, Math.hypot(xMax - xMin, yMax - yMin) / 2);
+      const wf = waveIntensity / 50;
+      const waveOn = audioEnergy > 0.005 && waveIntensity > 0;
+      const nowW = performance.now();
       for (let ri = 0; ri < RIPPLE_COUNT; ri++) {
       const t = (elapsed - ri * RIPPLE_STAGGER) / RIPPLE_DURATION;
       if (t <= 0 || t >= 1) continue;
@@ -4986,7 +4989,16 @@
       const m = e * 0.15;
       const map = (px, py) => {
         const dx = px - cx, dy = py - cy;
-        const d = Math.hypot(dx, dy) || 1;
+        let d = Math.hypot(dx, dy) || 1;
+        if (waveOn) {
+          const tr = Math.min(1, d / r0);
+          const binF = tr * (WAVE_BINS - 1);
+          const lo = Math.floor(binF);
+          const hi = Math.min(lo + 1, WAVE_BINS - 1);
+          const fr = binF - lo;
+          const amp = waveData[lo] * (1 - fr) + waveData[hi] * fr;
+          d += Math.sin(tr * Math.PI * 6 + nowW * 0.005) * amp * fs * 0.06 * wf;
+        }
         const ds = d * sc;
         const rr = ds + (R - ds) * m;
         return [cx + dx / d * rr, cy + dy / d * rr];
