@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sonic Type</title>
+  <title>Sonitype</title>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="dc2bae57-f259-4f89-88c9-732fe4076c80"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -128,6 +128,8 @@
       align-items: flex-start;
       min-width: 0;
       width: 100%;
+      min-height: calc(100vh - 100px);
+      cursor: text;
       overflow-x: hidden;
     }
     canvas {
@@ -136,6 +138,10 @@
       outline: none;
       max-width: 100%;
       min-height: 300px;
+    }
+    #canvas {
+      min-height: 0;
+      height: auto !important;
     }
     #controls {
       width: 100%;
@@ -209,12 +215,12 @@
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
-    #kerning-val, #volume-val, #polyphony-val, #layer-val, #gradation-val {
+    #kerning-val, #volume-val, #polyphony-val, #layer-mode-val, #active-layer-val, #layer-val, #gradation-val {
       min-width: 86px;
     }
     .controls-btn-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 8px;
       width: 100%;
     }
@@ -223,7 +229,8 @@
       text-align: center;
       padding: 7px 8px;
       font-size: 10px;
-      white-space: nowrap;
+      white-space: normal;
+      min-width: 0;
     }
     .sound-btn-wrap {
       grid-column: 1 / -1;
@@ -267,6 +274,81 @@
       background: transparent;
       color: transparent;
       caret-color: transparent;
+    }
+    #layer-tabs-bar {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--fg-08);
+      border: 1px solid var(--fg-20);
+      font-size: 11px;
+      font-family: 'Inter', system-ui, sans-serif;
+      user-select: none;
+      width: 100%;
+      max-width: 680px;
+      box-sizing: border-box;
+    }
+    .layer-bar-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      opacity: 0.5;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    #layer-tabs-container {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .layer-tab-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--fg-25);
+      background: transparent;
+      color: var(--fg-50);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      text-transform: none;
+    }
+    .layer-tab-btn:hover {
+      border-color: var(--fg-50);
+      color: var(--fg-90);
+    }
+    .layer-tab-btn.active {
+      border-color: #ff3333;
+      background: rgba(255, 51, 51, 0.12);
+      color: var(--fg);
+      font-weight: 500;
+      box-shadow: 0 0 10px rgba(255, 51, 51, 0.2);
+    }
+    .layer-tab-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--fg-25);
+      display: inline-block;
+    }
+    .layer-tab-btn.active .layer-tab-dot {
+      background: #ff3333;
+      box-shadow: 0 0 6px #ff3333;
+    }
+    .layer-bar-hint {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: 0.45;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
     }
     @media (max-width: 900px) {
       #workspace-grid {
@@ -569,7 +651,7 @@
 <body class="dark">
   <header id="site-header">
     <div class="header-left">
-      <span class="current-page">sonic type</span>
+      <span class="current-page">sonitype</span>
     </div>
     <div class="header-right">
       <button id="themeBtn" class="header-icon" title="Toggle theme">
@@ -622,9 +704,9 @@
         <div class="slider-group">
           <div class="slider-header">
             <label>Layer Mode</label>
-            <span class="slider-val" id="layer-val">Single</span>
+            <span class="slider-val" id="layer-mode-val">Single</span>
           </div>
-          <select id="layerSelect" aria-label="Layer Mode">
+          <select id="layerModeSelect" aria-label="Layer Mode">
             <option value="single" selected>Single Layer</option>
             <option value="double">Double Layer</option>
             <option value="blended">Blended</option>
@@ -658,6 +740,20 @@
             <option value="red-black" selected>Red → Black</option>
             <option value="mono">Black and White</option>
             <option value="rainbow">Rainbow</option>
+          </select>
+        </div>
+        <div class="slider-group" id="activeLayerGroup">
+          <div class="slider-header">
+            <label>Active Input Layer</label>
+            <span class="slider-val" id="active-layer-val">Inter</span>
+          </div>
+          <select id="activeLayerSelect" aria-label="Active Layer">
+            <option value="inter" selected>Inter (Electric)</option>
+            <option value="roboto-slab">Roboto Slab (Ambient)</option>
+            <option value="space-grotesk">Space Grotesk (Alphabet)</option>
+            <option value="playfair-display">Playfair Display (English)</option>
+            <option value="reading">Reading (Narrator)</option>
+            <option value="morse">Morse Code (Dots/Dashes)</option>
           </select>
         </div>
         <div class="slider-group">
@@ -722,9 +818,9 @@
               <span class="m-badge" id="mDriveBadge">DRIVE: 0%</span>
             </div>
             <div class="matrix-presets">
-              <button class="m-preset-btn active" data-preset="balanced">Default</button>
+              <button class="m-preset-btn" data-preset="balanced">Default</button>
               <button class="m-preset-btn" data-preset="glitch">Glitch</button>
-              <button class="m-preset-btn" data-preset="sub">Sub</button>
+              <button class="m-preset-btn active" data-preset="sub">Sub</button>
               <button class="m-preset-btn" data-preset="fm">FM Ping</button>
               <button class="m-preset-btn" data-preset="metallic">Metallic</button>
             </div>
@@ -741,6 +837,11 @@
     </aside>
 
     <main id="typography-column">
+      <div id="layer-tabs-bar">
+        <span class="layer-bar-title">LAYER:</span>
+        <div id="layer-tabs-container"></div>
+        <span class="layer-bar-hint">[Tab] switch layer</span>
+      </div>
       <canvas id="canvas" tabindex="0"></canvas>
     </main>
   </div>
@@ -809,7 +910,7 @@
     let kerningEnabled = true;
     let sizeEnabled = true;
     let fadeEnabled = true;
-    let soundEnabled = false;
+    let soundEnabled = true;
     let polyphonyMode = 'off';
     let secondaryFontKey = 'roboto-slab';
     let layerMode = 'single';
@@ -857,6 +958,146 @@
     };
     const PALETTE_KEYS = ['mono', 'rainbow', 'red-black'];
 
+    function getFontDisplayName(key) {
+      switch (key) {
+        case 'inter': return 'Inter';
+        case 'roboto-slab': return 'Roboto Slab';
+        case 'space-grotesk': return 'Space Grotesk';
+        case 'playfair-display': return 'Playfair Display';
+        case 'reading': return 'Reading';
+        case 'morse': return 'Morse';
+        default: return key;
+      }
+    }
+
+    function getPolyphonyTypes() {
+      switch (polyphonyMode) {
+        case 'ambient-electric':
+          return ['roboto-slab', 'inter'];
+        case 'ambient-alphabet':
+          return ['roboto-slab', 'space-grotesk'];
+        case 'electric-alphabet':
+          return ['inter', 'space-grotesk'];
+        case 'custom':
+          return [getActiveFontKey(), secondaryFontKey || 'roboto-slab'];
+        default:
+          return [activeLayer || getActiveFontKey()];
+      }
+    }
+
+    function getActivePolyphonyLayers() {
+      if (polyphonyMode === 'off') {
+        return [activeLayer || getActiveFontKey()];
+      }
+      return getPolyphonyTypes();
+    }
+
+    // Layer selection for multi-layer polyphony
+    const activeLayerSelect = document.getElementById('activeLayerSelect');
+    const activeLayerVal = document.getElementById('active-layer-val');
+    
+    function updateActiveLayer(newLayer) {
+      if (!layerTextData[newLayer]) return;
+      if (activeLayer === newLayer) return;
+      
+      // Save outgoing layer cursor
+      updateLayerCursor(activeLayer, cursorLine, cursorCol);
+      
+      activeLayer = newLayer;
+      
+      // Sync incoming layer cursor
+      syncActiveLayerCursor();
+      // Use the synced cursor position instead of checking old cursorLine
+      const synced = layerCursors[activeLayer] || { line: 0, col: 0 };
+      cursorLine = synced.line;
+      cursorCol = synced.col;
+      const activeText = layerTextData[activeLayer] || [[]];
+      if (!activeText[cursorLine]) cursorLine = 0;
+      if (!activeText[cursorLine]) activeText[0] = [];
+      cursorCol = Math.min(cursorCol, activeText[cursorLine].length);
+      updateLayerCursor(activeLayer, cursorLine, cursorCol);
+      
+      if (fontCache[activeLayer]) {
+        font = fontCache[activeLayer];
+      }
+      
+      // If polyphony is off, keep fontSelect aligned
+      if (polyphonyMode === 'off' && fontSelect && fontSelect.value !== newLayer) {
+        fontSelect.value = newLayer;
+        if (typeof loadFont === 'function') loadFont(false);
+      }
+      
+      if (activeLayerSelect && activeLayerSelect.value !== newLayer) {
+        activeLayerSelect.value = newLayer;
+      }
+      if (activeLayerVal) {
+        activeLayerVal.textContent = getSoundTypeName(newLayer);
+      }
+      
+      renderLayerTabs();
+      updateSoundToggleUI();
+      resetBlink();
+      scheduleFrame();
+    }
+    
+    if (activeLayerSelect) {
+      activeLayerSelect.addEventListener('change', (e) => {
+        updateActiveLayer(e.target.value);
+        canvas.focus();
+      });
+    }
+
+    function updateActiveLayerSelectOptions() {
+      if (!activeLayerSelect) return;
+      const polyLayers = getActivePolyphonyLayers();
+      activeLayerSelect.innerHTML = '';
+      polyLayers.forEach((layerKey, idx) => {
+        const opt = document.createElement('option');
+        opt.value = layerKey;
+        const typeName = getSoundTypeName(layerKey);
+        const fontName = getFontDisplayName(layerKey);
+        opt.textContent = `Layer ${idx + 1}: ${fontName} (${typeName})`;
+        activeLayerSelect.appendChild(opt);
+      });
+      activeLayerSelect.value = activeLayer;
+      if (activeLayerVal) {
+        activeLayerVal.textContent = getSoundTypeName(activeLayer);
+      }
+      const grp = document.getElementById('activeLayerGroup');
+      if (grp) {
+        grp.style.display = (polyphonyMode !== 'off') ? 'flex' : 'none';
+      }
+    }
+
+    function renderLayerTabs() {
+      const bar = document.getElementById('layer-tabs-bar');
+      const container = document.getElementById('layer-tabs-container');
+      if (!bar || !container) return;
+      
+      if (polyphonyMode === 'off') {
+        bar.style.display = 'none';
+        return;
+      }
+      bar.style.display = 'flex';
+      container.innerHTML = '';
+      
+      const polyLayers = getActivePolyphonyLayers();
+      polyLayers.forEach((layerKey, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'layer-tab-btn' + (layerKey === activeLayer ? ' active' : '');
+        const typeName = getSoundTypeName(layerKey);
+        const fontName = getFontDisplayName(layerKey);
+        btn.innerHTML = `<span class="layer-tab-dot"></span><span>Layer ${idx + 1}: ${fontName} (${typeName})</span>`;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateActiveLayer(layerKey);
+          canvas.focus();
+        });
+        container.appendChild(btn);
+      });
+    }
+
     function updatePalette(newPalette, schedule = true) {
       if (!PALETTE_KEYS.includes(newPalette)) return;
       colorPalette = newPalette;
@@ -885,9 +1126,9 @@
     const polyphonySelect = document.getElementById('polyphonySelect');
     const secondaryFontGroup = document.getElementById('secondaryFontGroup');
     const secondaryFontSelect = document.getElementById('secondaryFontSelect');
-    const layerSelect = document.getElementById('layerSelect');
+    const layerModeSelect = document.getElementById('layerModeSelect');
     const polyphonyVal = document.getElementById('polyphony-val');
-    const layerVal = document.getElementById('layer-val');
+    const layerModeVal = document.getElementById('layer-mode-val');
 
     window.updatePolyphonyUI = function() {
       if (polyphonySelect) {
@@ -902,10 +1143,10 @@
     };
 
     window.updateLayerUI = function() {
-      if (layerSelect) {
-        layerSelect.value = layerMode;
-        if (layerVal) {
-          layerVal.textContent = layerMode === 'single' ? 'Single' : layerMode === 'double' ? 'Double' : 'Blended';
+      if (layerModeSelect) {
+        layerModeSelect.value = layerMode;
+        if (layerModeVal) {
+          layerModeVal.textContent = layerMode === 'single' ? 'Single' : layerMode === 'double' ? 'Double' : 'Blended';
         }
       }
     };
@@ -923,7 +1164,17 @@
           secondaryFontKey = modes[polyphonyMode] || 'roboto-slab';
           if (secondaryFontSelect) secondaryFontSelect.value = secondaryFontKey;
         }
+        if (polyphonyMode !== 'off' && layerMode === 'single') {
+          layerMode = 'blended';
+          window.updateLayerUI();
+        }
+        const polyLayers = getActivePolyphonyLayers();
+        if (!polyLayers.includes(activeLayer)) {
+          updateActiveLayer(polyLayers[0]);
+        }
         window.updatePolyphonyUI();
+        updateActiveLayerSelectOptions();
+        renderLayerTabs();
         // Reload fonts when polyphony mode changes
         loadFont(false).then(() => {
           canvas.focus();
@@ -935,13 +1186,17 @@
     if (secondaryFontSelect) {
       secondaryFontSelect.addEventListener('change', (e) => {
         secondaryFontKey = e.target.value;
-        canvas.focus();
-        scheduleFrame();
+        updateActiveLayerSelectOptions();
+        renderLayerTabs();
+        loadFont(false).then(() => {
+          canvas.focus();
+          scheduleFrame();
+        });
       });
     }
 
-    if (layerSelect) {
-      layerSelect.addEventListener('change', (e) => {
+    if (layerModeSelect) {
+      layerModeSelect.addEventListener('change', (e) => {
         layerMode = e.target.value;
         window.updateLayerUI();
         canvas.focus();
@@ -1120,7 +1375,7 @@
           // Clear existing text and start clock
           dMsgStop();
           stopAutoplay();
-          textData = [[]];
+          layerTextData[activeLayer] = [[]];
           cursorLine = 0;
           cursorCol = 0;
           lastClockTime = '';
@@ -1130,7 +1385,7 @@
           // Stop clock and restore normal mode
           clearInterval(clockTimer);
           clockTimer = null;
-          textData = [[]];
+          layerTextData[activeLayer] = [[]];
           cursorLine = 0;
           cursorCol = 0;
           dMsgActive = true;
@@ -1281,7 +1536,7 @@
 
       if (currentTime !== lastClockTime) {
         // Clear previous display
-        textData = [[], [], []]; // 3 lines for hours, minutes, seconds
+        layerTextData[activeLayer] = [[], [], []]; // 3 lines for hours, minutes, seconds
         cursorLine = 0;
         cursorCol = 0;
 
@@ -1304,7 +1559,7 @@
                 kerning: 0,
                 fontSize: FONT_SIZE * 2.0 // Even larger for multi-line display
               });
-              textData[lineIndex].push(newChar);
+              layerTextData[activeLayer][lineIndex].push(newChar);
 
               // Play sound for each character
               if (soundEnabled) {
@@ -1338,10 +1593,10 @@
     };
 
     let matrixPoints = [
-      { x: 0.06, y: 0.15 }, // P0: Floor / Sub-weight
-      { x: 0.28, y: 0.85 }, // P1: Attack / Transient snap
-      { x: 0.68, y: 0.65 }, // P2: Resonance / FM peak
-      { x: 0.94, y: 0.20 }  // P3: Decay / Tail
+      { x: 0.04, y: 0.90 }, // P0: Floor / Sub-weight (sub preset default)
+      { x: 0.15, y: 0.55 }, // P1: Attack / Transient snap
+      { x: 0.28, y: 0.25 }, // P2: Resonance / FM peak
+      { x: 0.65, y: 0.08 }  // P3: Decay / Tail
     ];
     let activeDragIdx = -1;
 
@@ -2087,18 +2342,20 @@
     }
 
     /* ===== Loop Engineering Engine ===== */
-    const LOOP_MODES = ['evolving', 'glitch', 'ambient', 'straight'];
+    const LOOP_MODES = ['evolving', 'glitch', 'ambient', 'straight', 'font-rotation'];
     const LOOP_MODE_LABELS = {
       evolving: 'Loop: Evolving (4-Bar)',
       glitch: 'Loop: Glitch (IDM)',
       ambient: 'Loop: Ambient (Chords)',
-      straight: 'Loop: Straight'
+      straight: 'Loop: Straight',
+      'font-rotation': 'Loop: Font Rotation'
     };
     const M_LOOP_LABELS = {
       evolving: 'LOOP: EVOLV',
       glitch: 'LOOP: GLITCH',
       ambient: 'LOOP: AMB',
-      straight: 'LOOP: STR8'
+      straight: 'LOOP: STR8',
+      'font-rotation': 'LOOP: FONT'
     };
 
     const loopEngine = {
@@ -2113,6 +2370,35 @@
         this.cycleCount++;
         this.stepInCycle = 0;
         this.bar = (this.cycleCount - 1) % 4;
+        
+        // Font rotation mode: change font on each loop
+        if (this.mode === 'font-rotation' && fontSelect) {
+          const fonts = ['inter', 'roboto-slab', 'space-grotesk', 'playfair-display'];
+          const currentFont = (fontSelect && fontSelect.value) || 'inter';
+          const currentIdx = fonts.indexOf(currentFont);
+          
+          // Safety check: if current font not in list, start from index 0
+          const safeCurrentIdx = currentIdx >= 0 ? currentIdx : 0;
+          const nextIdx = (safeCurrentIdx + 1) % fonts.length;
+          const nextFont = fonts[nextIdx];
+          
+          // Apply font change with error handling
+          try {
+            fontSelect.value = nextFont;
+            
+            // Trigger font change event with delay to ensure smooth transition
+            setTimeout(() => {
+              if (typeof loadFont === 'function') {
+                loadFont(false).catch(err => {
+                  console.error('Font rotation failed:', err);
+                });
+              }
+            }, 50);
+          } catch (err) {
+            console.error('Font rotation error:', err);
+          }
+        }
+        
         if (typeof updateAmbientDroneChord === 'function') {
           updateAmbientDroneChord(this.bar);
         }
@@ -3453,13 +3739,13 @@
     updateKerningUI();
 
     const DPR = window.devicePixelRatio || 1;
-    let FONT_SIZE = isMobile ? 120 : 260;
+    let FONT_SIZE = isMobile ? 60 : 130;
     const PADDING = isMobile ? 24 : 32;
     const ON_CURVE_RADIUS = isMobile ? 2.5 : 3.5;
     const OFF_CURVE_RADIUS = isMobile ? 1.8 : 2.5;
-    const LABEL_MARGIN = 0;
+    const LABEL_MARGIN = 25; // Extra space for kerning at left edge
     const LINE_GAP = isMobile ? 12 : 20;
-    const DESKTOP_LINE_HEIGHT_RATIO = 0.75;
+    const DESKTOP_LINE_HEIGHT_RATIO = 0.9;
 
     let font = null;
     let mobileRedraw = null;
@@ -3474,9 +3760,46 @@
     let cursorCol = 0;
     let cursorVisible = true;
     let blinkTimer = null;
+    
+    const ALL_LAYER_KEYS = ['inter', 'roboto-slab', 'space-grotesk', 'playfair-display', 'reading', 'morse'];
+
+    // Multi-layer cursor management
+    let layerCursors = {
+      'inter': { line: 0, col: 0 },
+      'roboto-slab': { line: 0, col: 0 },
+      'space-grotesk': { line: 0, col: 0 },
+      'playfair-display': { line: 0, col: 0 },
+      'reading': { line: 0, col: 0 },
+      'morse': { line: 0, col: 0 }
+    };
+    
+    function syncActiveLayerCursor() {
+      if (layerCursors[activeLayer]) {
+        cursorLine = layerCursors[activeLayer].line;
+        cursorCol = layerCursors[activeLayer].col;
+      }
+    }
+    
+    function updateLayerCursor(layer, line, col) {
+      if (layerCursors[layer]) {
+        layerCursors[layer].line = line;
+        layerCursors[layer].col = col;
+      }
+    }
 
     let charIdCounter = 0;
     let textData = [[]];
+    
+    // Multi-layer text data for polyphony
+    let layerTextData = {
+      'inter': textData,
+      'roboto-slab': [[]],
+      'space-grotesk': [[]],
+      'playfair-display': [[]],
+      'reading': [[]],
+      'morse': [[]]
+    };
+    let activeLayer = 'inter'; // Default active layer
 
     const animations = new Map();
 
@@ -3490,7 +3813,7 @@
 
     function getBaseFontSize() {
       const vol = getVolume();
-      const defaultSize = isMobile ? 120 : 260;
+      const defaultSize = isMobile ? 60 : 130;
       return Math.max(30, Math.round(defaultSize * (vol / 0.8)));
     }
 
@@ -3515,6 +3838,11 @@
     function getGlyphFillColor(charObj, progress, fadeT, isDeleting, showFill, dark, fgVal) {
       if (isDeleting && progress < 1) {
         return 'rgba(255, 255, 0, 1)';
+      }
+
+      // No fill for demo message characters
+      if (charObj && charObj.isDemo) {
+        showFill = false;
       }
 
       if (colorPalette === 'mono') {
@@ -3585,7 +3913,9 @@
     }
 
     function getTextLines() {
-      return textData.map(line => line.map(c => c.char).join(''));
+      // Return text from active layer for display
+      const activeText = layerTextData[activeLayer] || textData;
+      return activeText.map(line => line.map(c => c.char).join(''));
     }
 
     if (speedSlider) {
@@ -3695,9 +4025,9 @@
 
     const FONT_SOURCES = {
       inter: [
+        'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/docs/font-files/Inter-Regular.otf',
         'https://cdn.jsdelivr.net/gh/rsms/inter@v4.0/docs/font-files/InterVariable.woff2',
         'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/docs/font-files/Inter-Regular.woff2',
-        'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/docs/font-files/Inter-Regular.otf',
       ],
       'space-grotesk': [
         'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/spacegrotesk/SpaceGrotesk[wght].ttf',
@@ -3737,7 +4067,7 @@
     }
 
     function initCharObj(charObj) {
-      const fontKey = getActiveFontKey();
+      const fontKey = activeLayer || getActiveFontKey();
       charObj.fontType = fontKey;
       charObj.secondaryFontType = polyphonyMode !== 'off' ? secondaryFontKey : null;
       // Store original character for Morse conversion
@@ -3747,13 +4077,17 @@
     }
 
     function reassignAllCharFontTypes() {
-      const fontKey = getActiveFontKey();
-      for (const line of textData) {
-        for (const c of line) {
-          c.fontType = fontKey;
+      for (const k of ALL_LAYER_KEYS) {
+        if (layerTextData[k]) {
+          for (const line of layerTextData[k]) {
+            for (const c of line) {
+              c.fontType = k;
+            }
+          }
         }
       }
       if (Array.isArray(mTextData)) {
+        const fontKey = getActiveFontKey();
         for (const line of mTextData) {
           for (const c of line) {
             c.fontType = fontKey;
@@ -3763,8 +4097,9 @@
     }
 
     function getGlyphForCharObj(charObj) {
-      if (!font || !charObj || typeof charObj.char !== 'string') return null;
-      const glyphs = font.stringToGlyphs(charObj.char);
+      const f = (charObj && charObj.fontType && fontCache[charObj.fontType]) || font;
+      if (!f || !charObj || typeof charObj.char !== 'string') return null;
+      const glyphs = f.stringToGlyphs(charObj.char);
       return glyphs[0] || null;
     }
 
@@ -3818,14 +4153,21 @@
 
     async function loadFont(restartMessages = true) {
       const key = getActiveFontKey();
-      let loaded = await fetchSingleFont(key);
-      if (!loaded) loaded = await fetchSingleFont('inter');
-      font = loaded;
+      const polyLayers = getActivePolyphonyLayers();
+      const fontsToLoad = new Set([key, activeLayer, ...polyLayers]);
+      
+      for (const k of fontsToLoad) {
+        if (!fontCache[k]) {
+          await fetchSingleFont(k);
+        }
+      }
+
+      font = fontCache[activeLayer] || fontCache[key] || fontCache['inter'];
 
       // Load secondary font if polyphony is enabled
       if (polyphonyMode !== 'off' && layerMode !== 'single') {
-        const secKey = secondaryFontKey || 'roboto-slab';
-        let secLoaded = await fetchSingleFont(secKey);
+        const secKey = polyLayers.find(k => k !== activeLayer) || secondaryFontKey || 'roboto-slab';
+        let secLoaded = fontCache[secKey] || await fetchSingleFont(secKey);
         if (!secLoaded) secLoaded = await fetchSingleFont('inter');
         secondaryFont = secLoaded;
       } else {
@@ -3835,6 +4177,8 @@
       reassignAllCharFontTypes();
       updateSoundToggleUI();
       updateAmbientDroneState();
+      updateActiveLayerSelectOptions();
+      renderLayerTabs();
 
       resetBlink();
       if (isMobile) {
@@ -3850,6 +4194,9 @@
 
     if (fontSelect) {
       fontSelect.addEventListener('change', async () => {
+        if (polyphonyMode === 'off') {
+          updateActiveLayer(fontSelect.value);
+        }
         await loadFont(false);
         updateReadingSpeedUI();
       });
@@ -3997,7 +4344,7 @@
       scrollCameraToPlayback(false);
     }
 
-    const dMsgs = ['try hear the sound of typing'];
+    const dMsgs = ['type and listen'];
     dMsgActive = true;
     let dMsgIndex = 0;
     let dMsgCharIdx = 0;
@@ -4013,11 +4360,14 @@
       if (dMsgCharIdx < msg.length) {
         const ch = msg[dMsgCharIdx];
         const newChar = initCharObj({ char: ch, id: charIdCounter++, done: false, kerning: 0, fontSize: FONT_SIZE });
-        textData[0].splice(cursorCol, 0, newChar);
+        // Mark as demo message character to disable fill effect
+        newChar.isDemo = true;
+        layerTextData[activeLayer][0].splice(cursorCol, 0, newChar);
         cursorCol++;
         updatePlayback(newChar, 0, cursorCol);
         triggerCharFlash(newChar);
-        pronounceChar(ch, false, newChar.fontType, newChar, { source: 'dmsg', msg, charIdx: dMsgCharIdx });
+        // No sound for demo message - just show text
+        // pronounceChar(ch, false, newChar.fontType, newChar, { source: 'dmsg', msg, charIdx: dMsgCharIdx });
         startAnimation(newChar);
         scheduleFrame();
         scrollCameraToPlayback(false);
@@ -4036,7 +4386,7 @@
 
     function dMsgDeleteNext() {
       if (!dMsgActive) return;
-      const line = textData[0];
+      const line = layerTextData[activeLayer][0];
       if (!line || line.length === 0) {
         dMsgIndex++;
         if (dMsgIndex >= dMsgs.length) dMsgIndex = 0;
@@ -4055,7 +4405,8 @@
           cursorCol = Math.max(0, cursorCol - 1);
           updatePlayback(target, 0, cursorCol);
           triggerCharFlash(target);
-          pronounceChar(target.char, true, target.fontType, target);
+          // No sound for demo message deletion
+          // pronounceChar(target.char, true, target.fontType, target);
           startDeleteAnimation(target);
           scheduleFrame();
           scrollCameraToPlayback(false);
@@ -4073,17 +4424,19 @@
       dMsgTimer = null;
       clearTimeout(englishWordTimer);
       if (typeof speechSynthesis !== 'undefined' && speechSynthesis) speechSynthesis.cancel();
-      for (const line of textData) {
+      const activeText = layerTextData[activeLayer] || [[]];
+      for (const line of activeText) {
         for (const c of line) animations.delete(c.id);
       }
-      textData = [[]];
+      layerTextData[activeLayer] = [[]];
       cursorLine = 0;
       cursorCol = 0;
       scheduleFrame();
     }
 
     function getCursorX(lineIndex, col) {
-      const lineChars = textData[lineIndex] || [];
+      const activeText = layerTextData[activeLayer] || [[]];
+      const lineChars = activeText[lineIndex] || [];
       const text = lineChars.slice(0, col).map(c => c.char).join('');
       const glyphs = font.stringToGlyphs(text);
       let x = PADDING + LABEL_MARGIN;
@@ -4126,12 +4479,12 @@
     function updateAnimations() {
       const now = performance.now();
       const speed = getSpeed();
-      const cmdPerSec = speed * 1.5;
+      const cmdPerSec = speed * 2.5; // Increased for faster animation
 
       const toRemove = [];
       for (const [id, anim] of animations) {
         const elapsed = (now - anim.startTime) / 1000;
-        const totalCmds = anim.totalCmds || 20;
+        const totalCmds = anim.totalCmds || 10; // Reduced for faster completion
         const rawProgress = (elapsed * cmdPerSec) / totalCmds;
 
         if (anim.direction === -1) {
@@ -4144,11 +4497,13 @@
           anim.progress = Math.min(1, rawProgress);
           if (anim.progress >= 1) {
             anim.progress = 1;
-            for (const line of textData) {
-              for (const c of line) {
-                if (c.id === id) {
-                  c.done = true;
-                  if (!c.doneTime) c.doneTime = now;
+            for (const layerKey in layerTextData) {
+              for (const line of layerTextData[layerKey]) {
+                for (const c of line) {
+                  if (c.id === id) {
+                    c.done = true;
+                    if (!c.doneTime) c.doneTime = now;
+                  }
                 }
               }
             }
@@ -4158,14 +4513,17 @@
 
       for (const id of toRemove) {
         animations.delete(id);
-        for (const line of textData) {
-          const idx = line.findIndex(c => c.id === id);
-          if (idx !== -1) {
-            line.splice(idx, 1);
-            if (cursorCol > idx && cursorLine === textData.indexOf(line)) {
-              cursorCol = Math.max(0, cursorCol - 1);
+        for (const layerKey in layerTextData) {
+          for (let lineIdx = 0; lineIdx < layerTextData[layerKey].length; lineIdx++) {
+            const line = layerTextData[layerKey][lineIdx];
+            const idx = line.findIndex(c => c.id === id);
+            if (idx !== -1) {
+              line.splice(idx, 1);
+              if (layerKey === activeLayer && cursorCol > idx && cursorLine === lineIdx) {
+                cursorCol = Math.max(0, cursorCol - 1);
+              }
+              break;
             }
-            break;
           }
         }
       }
@@ -4623,9 +4981,15 @@
 
     function collectAutoplayChars() {
       const chars = [];
-      for (const line of textData) {
-        for (const c of line) {
-          if (!c.deleting) chars.push(c);
+      const polyLayers = getActivePolyphonyLayers();
+      const isMulti = (polyphonyMode !== 'off' && layerMode !== 'single' && polyLayers.length > 1);
+      const layersToCheck = isMulti ? polyLayers : [activeLayer];
+      for (const lKey of layersToCheck) {
+        const lData = layerTextData[lKey] || [];
+        for (const line of lData) {
+          for (const c of line) {
+            if (!c.deleting) chars.push(c);
+          }
         }
       }
       return chars;
@@ -4641,6 +5005,8 @@
       }
     }
 
+    let autoplayStepIdx = -1;
+
     function startAutoplay() {
       if (dMsgActive || !repeatEnabled) return;
       const chars = collectAutoplayChars();
@@ -4651,6 +5017,7 @@
       autoplayActive = true;
       autoplayLine = 0;
       autoplayIndex = -1;
+      autoplayStepIdx = -1;
       for (const c of chars) {
         c.done = false;
         c.doneTime = null;
@@ -4677,6 +5044,7 @@
       autoplayActive = false;
       autoplayLine = 0;
       autoplayIndex = -1;
+      autoplayStepIdx = -1;
       clearTimeout(autoplaySeqTimer);
       autoplaySeqTimer = null;
       clearTimeout(englishWordTimer);
@@ -4687,9 +5055,47 @@
 
     function stepAutoplay() {
       if (!autoplayActive || dMsgActive || !repeatEnabled) { stopAutoplay(); return; }
+
+      const polyLayers = getActivePolyphonyLayers();
+      const isMulti = (polyphonyMode !== 'off' && layerMode !== 'single' && polyLayers.length > 1);
+
+      if (isMulti) {
+        autoplayStepIdx++;
+        const streams = polyLayers.map(k => (layerTextData[k] || []).flat().filter(c => !c.deleting));
+        const maxLen = Math.max(...streams.map(s => s.length));
+        if (maxLen === 0) { stopAutoplay(); return; }
+
+        if (autoplayStepIdx < maxLen) {
+          let refChar = null;
+          streams.forEach(stream => {
+            if (stream.length > 0) {
+              const ch = stream[autoplayStepIdx % stream.length];
+              if (ch) {
+                refChar = refChar || ch;
+                ch.done = false;
+                ch.doneTime = null;
+                startAnimation(ch);
+                pronounceChar(ch.char, false, ch.fontType, ch, { source: 'autoplay' });
+                triggerCharFlash(ch);
+              }
+            }
+          });
+          if (refChar) updatePlayback(refChar, 0, autoplayStepIdx);
+          scheduleFrame();
+          const interval = getSequencerInterval(refChar || { fontType: activeLayer }, FONT_SIZE);
+          autoplaySeqTimer = setTimeout(stepAutoplay, interval);
+          return;
+        }
+        if (!repeatEnabled) { stopAutoplay(); return; }
+        autoplaySeqTimer = setTimeout(startAutoplay, AUTOPLAY_DELAY);
+        return;
+      }
+
+      // Single mode autoplay
       autoplayIndex++;
-      while (autoplayLine < textData.length) {
-        const line = textData[autoplayLine];
+      const activeText = layerTextData[activeLayer] || [[]];
+      while (autoplayLine < activeText.length) {
+        const line = activeText[autoplayLine];
         while (autoplayIndex < line.length) {
           const ch = line[autoplayIndex];
           if (ch && !ch.deleting) {
@@ -4716,10 +5122,97 @@
 
     let lastDisplayLines = [];
 
+    function getDisplayLinesForLayer(layerKey, wrapWidth) {
+      const lFont = fontCache[layerKey] || font;
+      const lData = layerTextData[layerKey] || [[]];
+      const textLines = lData.map(line => line.map(c => c.char).join(''));
+      const dLines = [];
+      let maxAdv = 0;
+
+      for (let li = 0; li < lData.length; li++) {
+        const lineChars = lData[li];
+        const glyphs = lFont ? lFont.stringToGlyphs(textLines[li]) : [];
+        let rowChars = [];
+        let rowGlyphs = [];
+        let rowW = 0;
+        let rowStartCol = 0;
+        let lastSpaceIdx = -1;
+        let wAtSpace = 0;
+        let charsAtSpace = 0;
+
+        for (let gi = 0; gi < glyphs.length; gi++) {
+          const charObj = lineChars[gi];
+          const cfs = getCharFontSize(charObj, FONT_SIZE);
+          let charW;
+          if (charObj && charObj.fontType === 'morse') {
+            const morse = charToMorse(charObj.char);
+            charW = cfs * 0.8 * morse.length;
+          } else {
+            charW = glyphs[gi].advanceWidth * (cfs / (lFont ? lFont.unitsPerEm : 1000));
+          }
+
+          let effectiveKerning = 0;
+          if (kerningEnabled) {
+            effectiveKerning = charObj ? (charObj.kerning || 0) : 0;
+            const prevChar = gi > 0 && lineChars[gi - 1] ? lineChars[gi - 1].char : null;
+            const currentChar = charObj ? charObj.char : null;
+            effectiveKerning += getEffectiveKerning(prevChar, currentChar, globalKerning);
+          }
+          charW += effectiveKerning;
+
+          if (charObj && charObj.char === ' ') {
+            lastSpaceIdx = gi;
+            wAtSpace = rowW + charW;
+            charsAtSpace = rowChars.length + 1;
+          }
+
+          if (rowChars.length > 0 && rowW + charW > wrapWidth) {
+            if (lastSpaceIdx >= 0 && lastSpaceIdx >= rowStartCol) {
+              const breakAt = charsAtSpace;
+              if (wAtSpace > maxAdv) maxAdv = wAtSpace;
+              dLines.push({ chars: rowChars.slice(0, breakAt), glyphs: rowGlyphs.slice(0, breakAt), srcLine: li, srcCol: rowStartCol });
+              rowStartCol += breakAt;
+              rowChars = rowChars.slice(breakAt);
+              rowGlyphs = rowGlyphs.slice(breakAt);
+              rowW = 0;
+              for (let k = 0; k < rowGlyphs.length; k++) {
+                const kfs = getCharFontSize(rowChars[k], FONT_SIZE);
+                let kAdv = (rowChars[k] && rowChars[k].fontType === 'morse')
+                  ? kfs * 0.8 * charToMorse(rowChars[k].char).length
+                  : rowGlyphs[k].advanceWidth * (kfs / (lFont ? lFont.unitsPerEm : 1000));
+                let kEff = 0;
+                if (kerningEnabled) {
+                  kEff = rowChars[k] ? (rowChars[k].kerning || 0) : 0;
+                  const kp = k > 0 && rowChars[k - 1] ? rowChars[k - 1].char : null;
+                  const kc = rowChars[k] ? rowChars[k].char : null;
+                  kEff += getEffectiveKerning(kp, kc, globalKerning);
+                }
+                rowW += kAdv + kEff;
+              }
+              lastSpaceIdx = -1;
+            } else {
+              if (rowW > maxAdv) maxAdv = rowW;
+              dLines.push({ chars: rowChars, glyphs: rowGlyphs, srcLine: li, srcCol: rowStartCol });
+              rowStartCol += rowChars.length;
+              rowChars = [];
+              rowGlyphs = [];
+              rowW = 0;
+              lastSpaceIdx = -1;
+            }
+          }
+          rowChars.push(charObj);
+          rowGlyphs.push(glyphs[gi]);
+          rowW += charW;
+        }
+        dLines.push({ chars: rowChars, glyphs: rowGlyphs, srcLine: li, srcCol: rowStartCol });
+        if (rowW > maxAdv) maxAdv = rowW;
+      }
+      return { displayLines: dLines, maxAdvance: maxAdv };
+    }
+
     function draw() {
       if (!font) return;
 
-      // Only update audio if sound is enabled
       if (soundEnabled) {
         updateAudioEnergy();
       }
@@ -4731,7 +5224,6 @@
       const bg = 'rgb(' + baseBg + ',' + baseBg + ',' + baseBg + ')';
       const fg = baseFg + ', ' + baseFg + ', ' + baseFg;
 
-      const textLines = getTextLines();
       const scale = FONT_SIZE / font.unitsPerEm;
       const ascender = font.ascender * scale;
       const descender = font.descender * scale;
@@ -4743,10 +5235,15 @@
 
       let maxCharSize = FONT_SIZE;
       if (sizeEnabled) {
-        for (const line of textData) {
-          for (const c of line) {
-            const cs = getCharFontSize(c, FONT_SIZE);
-            if (cs > maxCharSize) maxCharSize = cs;
+        for (const k of ALL_LAYER_KEYS) {
+          const lData = layerTextData[k];
+          if (lData) {
+            for (const line of lData) {
+              for (const c of line) {
+                const cs = getCharFontSize(c, FONT_SIZE);
+                if (cs > maxCharSize) maxCharSize = cs;
+              }
+            }
           }
         }
       }
@@ -4758,105 +5255,35 @@
       const typoCol = document.getElementById('typography-column');
       const typoAvailW = typoCol && typoCol.clientWidth > 0 ? typoCol.clientWidth : (window.innerWidth * 0.72);
       const maxCanvasW = Math.max(typoAvailW, 320);
-      const wrapWidth = maxCanvasW - PADDING * 2 - LABEL_MARGIN;
+      const wrapWidth = maxCanvasW - PADDING * 2 - LABEL_MARGIN * 2;
 
-      const displayLines = []; lastDisplayLines = displayLines;
-      for (let li = 0; li < textData.length; li++) {
-        const lineChars = textData[li];
-        const glyphs = font.stringToGlyphs(textLines[li]);
-        let rowChars = [];
-        let rowGlyphs = [];
-        let rowW = 0;
-        let rowStartCol = 0;
-        let lastSpaceIdx = -1;
-        let wAtSpace = 0;
-        let charsAtSpace = 0;
-        for (let gi = 0; gi < glyphs.length; gi++) {
-          const cfs = getCharFontSize(lineChars[gi], FONT_SIZE);
-          let charW = glyphs[gi].advanceWidth * (cfs / font.unitsPerEm);
+      const polyLayers = getActivePolyphonyLayers();
+      const isMultiLayer = (polyphonyMode !== 'off' && layerMode !== 'single' && polyLayers.length > 1);
 
-          // Get previous character for optical kerning
-          const prevChar = gi > 0 && lineChars[gi - 1] ? lineChars[gi - 1].char : null;
-          const currentChar = lineChars[gi] ? lineChars[gi].char : null;
+      // Inactive layers rendered first, active layer rendered on top
+      const layersToRender = isMultiLayer
+        ? [...polyLayers.filter(k => k !== activeLayer).map((k, i) => ({ key: k, isSecondary: true, layerIdx: i + 1 })),
+           { key: activeLayer, isSecondary: false, layerIdx: 0 }]
+        : [{ key: activeLayer, isSecondary: false, layerIdx: 0 }];
 
-          // Apply kerning based on mode
-          let effectiveKerning = 0;
-          if (kerningEnabled) {
-            effectiveKerning = lineChars[gi].kerning || 0;
-          }
-          effectiveKerning += getEffectiveKerning(prevChar, currentChar, globalKerning);
+      let overallMaxAdvance = 0;
+      let overallMaxLines = 1;
+      const renderedLayerData = [];
 
-          charW += effectiveKerning;
-
-          if (lineChars[gi] && lineChars[gi].char === ' ') {
-            lastSpaceIdx = gi;
-            wAtSpace = rowW + charW;
-            charsAtSpace = rowChars.length + 1;
-          }
-          if (rowChars.length > 0 && rowW + charW > wrapWidth) {
-            if (lastSpaceIdx >= 0 && lastSpaceIdx >= rowStartCol) {
-              const breakAt = charsAtSpace;
-              displayLines.push({ chars: rowChars.slice(0, breakAt), glyphs: rowGlyphs.slice(0, breakAt), srcLine: li, srcCol: rowStartCol });
-              rowStartCol += breakAt;
-              rowChars = rowChars.slice(breakAt);
-              rowGlyphs = rowGlyphs.slice(breakAt);
-              rowW = 0;
-              for (let k = 0; k < rowGlyphs.length; k++) {
-                const kfs = getCharFontSize(rowChars[k], FONT_SIZE);
-                const kPrevChar = k > 0 && rowChars[k - 1] ? rowChars[k - 1].char : null;
-                const kCurrentChar = rowChars[k] ? rowChars[k].char : null;
-
-                let kEffectiveKerning = 0;
-                if (kerningEnabled) {
-                  kEffectiveKerning = rowChars[k].kerning || 0;
-                }
-                kEffectiveKerning += getEffectiveKerning(kPrevChar, kCurrentChar, globalKerning);
-
-                rowW += rowGlyphs[k].advanceWidth * (kfs / font.unitsPerEm) + kEffectiveKerning;
-              }
-              lastSpaceIdx = -1;
-            } else {
-              displayLines.push({ chars: rowChars, glyphs: rowGlyphs, srcLine: li, srcCol: rowStartCol });
-              rowStartCol += rowChars.length;
-              rowChars = [];
-              rowGlyphs = [];
-              rowW = 0;
-              lastSpaceIdx = -1;
-            }
-          }
-          rowChars.push(lineChars[gi]);
-          rowGlyphs.push(glyphs[gi]);
-          rowW += charW;
+      for (const item of layersToRender) {
+        const lFont = fontCache[item.key] || font;
+        const layout = getDisplayLinesForLayer(item.key, wrapWidth);
+        if (layout.maxAdvance > overallMaxAdvance) overallMaxAdvance = layout.maxAdvance;
+        if (layout.displayLines.length > overallMaxLines) overallMaxLines = layout.displayLines.length;
+        if (item.key === activeLayer) {
+          lastDisplayLines = layout.displayLines;
         }
-        displayLines.push({ chars: rowChars, glyphs: rowGlyphs, srcLine: li, srcCol: rowStartCol });
-      }
-
-      let maxAdvance = 0;
-      for (const dl of displayLines) {
-        let adv = 0;
-        for (let i = 0; i < dl.glyphs.length; i++) {
-          const cfs = getCharFontSize(dl.chars[i], FONT_SIZE);
-          adv += dl.glyphs[i].advanceWidth * (cfs / font.unitsPerEm);
-
-          // Get previous character for optical kerning
-          const prevChar = i > 0 && dl.chars[i - 1] ? dl.chars[i - 1].char : null;
-          const currentChar = dl.chars[i] ? dl.chars[i].char : null;
-
-          // Apply kerning based on mode
-          let effectiveKerning = 0;
-          if (kerningEnabled) {
-            effectiveKerning = dl.chars[i].kerning || 0;
-          }
-          effectiveKerning += getEffectiveKerning(prevChar, currentChar, globalKerning);
-
-          adv += effectiveKerning;
-        }
-        if (adv > maxAdvance) maxAdvance = adv;
+        renderedLayerData.push({ ...item, font: lFont, displayLines: layout.displayLines });
       }
 
       const minWidth = Math.min(maxCanvasW, isMobile ? Math.min(window.innerWidth, 320) : 320);
-      const canvasW = Math.min(maxCanvasW, Math.max(maxAdvance + PADDING * 2 + LABEL_MARGIN, minWidth));
-      const canvasH = displayLines.length * Math.max(lineHeight, maxLineH) + (displayLines.length - 1) * LINE_GAP + PADDING * 2;
+      const canvasW = Math.min(maxCanvasW, Math.max(overallMaxAdvance + PADDING * 2 + LABEL_MARGIN * 2, minWidth));
+      const canvasH = overallMaxLines * Math.max(lineHeight, maxLineH) + (overallMaxLines - 1) * LINE_GAP + PADDING * 2;
 
       canvas.width = canvasW * DPR;
       canvas.height = canvasH * DPR;
@@ -4867,97 +5294,84 @@
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, canvasW, canvasH);
 
-      for (let dli = 0; dli < displayLines.length; dli++) {
-        const dl = displayLines[dli];
-        const baseline = PADDING + ascender + dli * (lineHeight + LINE_GAP);
-        let x = PADDING + LABEL_MARGIN;
+      // Draw metric lines
+      for (let mli = 0; mli < overallMaxLines; mli++) {
+        const off = mli * (lineHeight + LINE_GAP);
+        drawMetricLines(canvasW, PADDING + ascender + off, PADDING + off, PADDING + ascender - xHeight + off, PADDING + ascender - descender + off, fg);
+      }
 
-        const ascenderY = baseline - ascender;
-        const xHeightY = baseline - xHeight;
-        const descenderY = baseline - descender;
+      // Render each layer
+      for (const rLayer of renderedLayerData) {
+        const lFont = rLayer.font;
+        const dLines = rLayer.displayLines;
+        const isSecondary = rLayer.isSecondary;
 
-        if (dli === 0) {
-          drawMetricLines(canvasW, baseline, ascenderY, xHeightY, descenderY, fg);
-        }
+        for (let dli = 0; dli < dLines.length; dli++) {
+          const dl = dLines[dli];
+          const baseline = PADDING + ascender + dli * (lineHeight + LINE_GAP);
+          let x = PADDING + LABEL_MARGIN;
 
-        let anyCharFlash = false;
-        for (let gi = 0; gi < dl.glyphs.length; gi++) {
-          const glyph = dl.glyphs[gi];
-          const charObj = dl.chars[gi];
-          const cfs = getCharFontSize(charObj, FONT_SIZE);
+          for (let gi = 0; gi < dl.glyphs.length; gi++) {
+            const glyph = dl.glyphs[gi];
+            const charObj = dl.chars[gi];
+            const cfs = getCharFontSize(charObj, FONT_SIZE);
 
-          // Calculate character width - special handling for Morse mode
-          let charW;
-          if (charObj && charObj.fontType === 'morse') {
-            const morse = charToMorse(charObj.char);
-            const symbolCount = morse.length;
-            charW = cfs * 0.8 * symbolCount; // Each symbol takes 0.8x font size
-          } else {
-            charW = glyph.advanceWidth * (cfs / font.unitsPerEm);
-          }
-
-          // Apply kerning - simplified for performance
-          let effectiveKerning = 0;
-          if (kerningEnabled) {
-            effectiveKerning = charObj.kerning || 0;
-            effectiveKerning += globalKerning;
-          }
-
-          if (charObj && charObj.flashTime) {
-            const ft = 1 - Math.min(1, (now - charObj.flashTime) / FLASH_DURATION);
-            if (ft > 0) {
-              anyCharFlash = true;
-              let flashStyle;
-              if (colorPalette === 'rainbow') {
-                const hue = getCharHue(charObj);
-                flashStyle = 'hsla(' + hue + ', 100%, 50%, ' + (ft * 0.45).toFixed(3) + ')';
-              } else if (colorPalette === 'mono') {
-                flashStyle = 'rgba(' + fg + ', ' + (ft * 0.35).toFixed(3) + ')';
-              } else {
-                flashStyle = 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
-              }
-              ctx.fillStyle = flashStyle;
-              const pad = 4;
-              ctx.fillRect(x - pad, ascenderY - pad, charW + pad * 2 + effectiveKerning, descenderY - ascenderY + pad * 2);
+            let charW;
+            if (charObj && charObj.fontType === 'morse') {
+              const morse = charToMorse(charObj.char);
+              charW = cfs * 0.8 * morse.length;
+            } else {
+              charW = glyph.advanceWidth * (cfs / (lFont ? lFont.unitsPerEm : 1000));
             }
-          }
 
-          const progress = charObj ? getGlyphProgress(charObj) : 1;
-          const isDeleting = charObj && charObj.deleting;
-          let fadeT = 1;
-          if (fadeEnabled && charObj && charObj.doneTime && !isDeleting) {
-            fadeT = Math.min(1, (performance.now() - charObj.doneTime) / FADE_DURATION);
-          }
+            let effectiveKerning = 0;
+            if (kerningEnabled) {
+              effectiveKerning = charObj ? (charObj.kerning || 0) : 0;
+              const prevCh = gi > 0 && dl.chars[gi - 1] ? dl.chars[gi - 1].char : null;
+              effectiveKerning += getEffectiveKerning(prevCh, charObj ? charObj.char : null, globalKerning);
+            }
 
-          // Draw primary layer
-          if (charObj && charObj.fontType === 'morse') {
-            // Draw Morse code visualization instead of glyph
-            drawMorseVisualization(x, baseline, progress, cfs, isDeleting, fadeT, fg, charObj, false);
-          } else {
-            drawPartialGlyph(glyph, x, baseline, progress, cfs, isDeleting, fadeT, fg, charObj, false);
-          }
-
-          // Draw secondary layer if polyphony is enabled and not single layer mode
-          if (polyphonyMode !== 'off' && layerMode !== 'single' && secondaryFont && charObj && charObj.secondaryFontType) {
-            const secGlyphs = secondaryFont.stringToGlyphs(charObj.char);
-            if (secGlyphs && secGlyphs[0]) {
-              const secCfs = cfs * 0.85; // Slightly smaller for secondary layer
-              if (charObj.secondaryFontType === 'morse') {
-                drawMorseVisualization(x, baseline, progress, secCfs, isDeleting, fadeT, fg, charObj, true);
-              } else {
-                drawPartialGlyph(secGlyphs[0], x, baseline, progress, secCfs, isDeleting, fadeT, fg, charObj, true);
+            if (!isSecondary && charObj && charObj.flashTime) {
+              const ft = 1 - Math.min(1, (now - charObj.flashTime) / FLASH_DURATION);
+              if (ft > 0) {
+                let flashStyle;
+                if (colorPalette === 'rainbow') {
+                  const hue = getCharHue(charObj);
+                  flashStyle = 'hsla(' + hue + ', 100%, 50%, ' + (ft * 0.45).toFixed(3) + ')';
+                } else if (colorPalette === 'mono') {
+                  flashStyle = 'rgba(' + fg + ', ' + (ft * 0.35).toFixed(3) + ')';
+                } else {
+                  flashStyle = 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
+                }
+                ctx.fillStyle = flashStyle;
+                const pad = 4;
+                ctx.fillRect(x - pad, baseline - ascender - pad, charW + pad * 2 + effectiveKerning, ascender - descender + pad * 2);
               }
             }
-          }
 
-          x += charW;
+            const progress = charObj ? getGlyphProgress(charObj) : 1;
+            const isDeleting = charObj && charObj.deleting;
+            let fadeT = 1;
+            if (fadeEnabled && charObj && charObj.doneTime && !isDeleting) {
+              fadeT = Math.min(1, (performance.now() - charObj.doneTime) / FADE_DURATION);
+            }
+
+            if (charObj && charObj.fontType === 'morse') {
+              drawMorseVisualization(x, baseline, progress, cfs, isDeleting, fadeT, fg, charObj, isSecondary);
+            } else {
+              drawPartialGlyph(glyph, x, baseline, progress, cfs, isDeleting, fadeT, fg, charObj, isSecondary);
+            }
+
+            x += charW + effectiveKerning;
+          }
         }
       }
 
+      // Draw selection highlight for active layer
       if (selectAll) {
         ctx.fillStyle = 'rgba(' + fg + ', 0.08)';
-        for (let dli = 0; dli < displayLines.length; dli++) {
-          const dl = displayLines[dli];
+        for (let dli = 0; dli < lastDisplayLines.length; dli++) {
+          const dl = lastDisplayLines[dli];
           if (dl.chars.length === 0) continue;
           const bl = PADDING + ascender + dli * (lineHeight + LINE_GAP);
           const top = bl - ascender;
@@ -4965,31 +5379,26 @@
           let x0 = PADDING + LABEL_MARGIN, x1 = x0;
           for (let i = 0; i < dl.glyphs.length; i++) {
             const cfs = getCharFontSize(dl.chars[i], FONT_SIZE);
-            x1 += dl.glyphs[i].advanceWidth * (cfs / font.unitsPerEm);
-
-            // Get previous character for optical kerning
-            const prevChar = i > 0 && dl.chars[i - 1] ? dl.chars[i - 1].char : null;
-            const currentChar = dl.chars[i] ? dl.chars[i].char : null;
-
-            // Apply kerning based on mode
-            let effectiveKerning = 0;
+            x1 += dl.glyphs[i].advanceWidth * (cfs / (font ? font.unitsPerEm : 1000));
             if (kerningEnabled) {
-              effectiveKerning = dl.chars[i].kerning || 0;
+              x1 += (dl.chars[i] ? (dl.chars[i].kerning || 0) : 0) + globalKerning;
             }
-            effectiveKerning += getEffectiveKerning(prevChar, currentChar, globalKerning);
-
-            x1 += effectiveKerning;
           }
-          ctx.fillRect(x0, top, x1 - x0, bottom - top);
+          ctx.fillRect(x0 - 2, top, x1 - x0 + 4, bottom - top);
         }
       }
 
+      // Draw cursor for active layer
       if (cursorVisible) {
         let curDli = 0, curOff = cursorCol;
         let acc = 0;
-        for (let dli = 0; dli < displayLines.length; dli++) {
-          const displayLine = displayLines[dli];
-          if (displayLine.srcLine !== cursorLine) { if (displayLine.srcLine > cursorLine) break; acc += displayLine.chars.length; continue; }
+        for (let dli = 0; dli < lastDisplayLines.length; dli++) {
+          const displayLine = lastDisplayLines[dli];
+          if (displayLine.srcLine !== cursorLine) {
+            if (displayLine.srcLine > cursorLine) break;
+            acc += displayLine.chars.length;
+            continue;
+          }
           if (displayLine.srcLine === cursorLine) {
             if (cursorCol <= acc + displayLine.chars.length) {
               curDli = dli;
@@ -5001,30 +5410,21 @@
             curOff = displayLine.chars.length;
           }
         }
-        const cursorLine = displayLines[curDli];
+        const cursorDisplayLine = lastDisplayLines[curDli];
         let curX = PADDING + LABEL_MARGIN;
-        if (cursorLine) {
-          for (let i = 0; i < curOff && i < cursorLine.glyphs.length; i++) {
-            const cfs = getCharFontSize(cursorLine.chars[i], FONT_SIZE);
-            curX += cursorLine.glyphs[i].advanceWidth * (cfs / font.unitsPerEm);
-
-            // Get previous character for optical kerning
-            const prevChar = i > 0 && cursorLine.chars[i - 1] ? cursorLine.chars[i - 1].char : null;
-            const currentChar = cursorLine.chars[i] ? cursorLine.chars[i].char : null;
-
-            // Apply kerning based on mode
-            let effectiveKerning = 0;
+        if (cursorDisplayLine) {
+          const lFont = fontCache[activeLayer] || font;
+          for (let i = 0; i < curOff && i < cursorDisplayLine.glyphs.length; i++) {
+            const cfs = getCharFontSize(cursorDisplayLine.chars[i], FONT_SIZE);
+            curX += cursorDisplayLine.glyphs[i].advanceWidth * (cfs / (lFont ? lFont.unitsPerEm : 1000));
             if (kerningEnabled) {
-              effectiveKerning = cursorLine.chars[i].kerning || 0;
+              curX += (cursorDisplayLine.chars[i] ? (cursorDisplayLine.chars[i].kerning || 0) : 0) + globalKerning;
             }
-            effectiveKerning += getEffectiveKerning(prevChar, currentChar, globalKerning);
-
-            curX += effectiveKerning;
           }
         }
         const bl = PADDING + ascender + curDli * (lineHeight + LINE_GAP);
         ctx.strokeStyle = 'rgba(' + fg + ', 0.9)';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2.0;
         ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(curX, bl - ascender);
@@ -5055,7 +5455,8 @@
       ctx.restore();
     }
 
-    window.startAnimation = function(charObj) {
+    function startAnimation(charObj) {
+      window.startAnimation = startAnimation;
       const g = getGlyphForCharObj(charObj);
       const fs = getCharFontSize(charObj, FONT_SIZE);
       const path = g ? g.getPath(0, 0, fs) : { commands: [] };
@@ -5069,7 +5470,7 @@
         direction: 1
       });
       scheduleFrame();
-    };
+    }
 
     function startDeleteAnimation(charObj) {
       const g = getGlyphForCharObj(charObj);
@@ -5099,16 +5500,28 @@
         for (const c of line) animations.delete(c.id);
       }
       textData = [[]];
+      layerTextData[activeLayer] = textData;
       cursorLine = 0;
       cursorCol = 0;
       selectAll = false;
     }
 
-    canvas.addEventListener('keydown', (e) => {
+    function handleKeyDown(e) {
       if (!font) return;
       if (dMsgActive) dMsgStop();
       resetAutoplayTimer();
       const key = e.key;
+
+      if (key === 'Tab') {
+        const polyLayers = getActivePolyphonyLayers();
+        if (polyphonyMode !== 'off' && polyLayers.length > 1) {
+          e.preventDefault();
+          const curIdx = polyLayers.indexOf(activeLayer);
+          const nextIdx = (curIdx + 1) % polyLayers.length;
+          updateActiveLayer(polyLayers[nextIdx]);
+          return;
+        }
+      }
 
       if (key === 'a' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -5132,8 +5545,9 @@
         deleteAll();
         const newChar = initCharObj({ char: key, id: charIdCounter++, done: false, kerning: 0, fontSize: FONT_SIZE });
         tagDesktopTyping(newChar);
-        textData[0].push(newChar);
+        layerTextData[activeLayer][0].push(newChar);
         cursorCol = 1;
+        updateLayerCursor(activeLayer, 0, 1);
         activeKeyChar = newChar;
         activeKeyDownTime = performance.now();
         updatePlayback(newChar, 0, 1);
@@ -5161,19 +5575,21 @@
         e.preventDefault();
         clearTimeout(englishWordTimer);
         if (cursorCol > 0) {
-          const target = textData[cursorLine][cursorCol - 1];
+          const target = layerTextData[activeLayer][cursorLine][cursorCol - 1];
           if (target && !target.deleting) {
             triggerCharFlash(target);
             pronounceChar(target.char, true, target.fontType, target);
             startDeleteAnimation(target);
             cursorCol--;
+            updateLayerCursor(activeLayer, cursorLine, cursorCol);
           }
         } else if (cursorLine > 0) {
-          const prevLen = textData[cursorLine - 1].length;
-          textData[cursorLine - 1] = textData[cursorLine - 1].concat(textData[cursorLine]);
-          textData.splice(cursorLine, 1);
+          const prevLen = layerTextData[activeLayer][cursorLine - 1].length;
+          layerTextData[activeLayer][cursorLine - 1] = layerTextData[activeLayer][cursorLine - 1].concat(layerTextData[activeLayer][cursorLine]);
+          layerTextData[activeLayer].splice(cursorLine, 1);
           cursorLine--;
           cursorCol = prevLen;
+          updateLayerCursor(activeLayer, cursorLine, cursorCol);
         }
         updatePlayback(null, cursorLine, cursorCol);
         resetBlink();
@@ -5182,17 +5598,18 @@
       } else if (key === 'Delete') {
         e.preventDefault();
         clearTimeout(englishWordTimer);
-        if (cursorCol < textData[cursorLine].length) {
-          const target = textData[cursorLine][cursorCol];
+        if (cursorCol < layerTextData[activeLayer][cursorLine].length) {
+          const target = layerTextData[activeLayer][cursorLine][cursorCol];
           if (target && !target.deleting) {
             triggerCharFlash(target);
             pronounceChar(target.char, true, target.fontType, target);
             startDeleteAnimation(target);
           }
-        } else if (cursorLine < textData.length - 1) {
-          textData[cursorLine] = textData[cursorLine].concat(textData[cursorLine + 1]);
-          textData.splice(cursorLine + 1, 1);
+        } else if (cursorLine < layerTextData[activeLayer].length - 1) {
+          layerTextData[activeLayer][cursorLine] = layerTextData[activeLayer][cursorLine].concat(layerTextData[activeLayer][cursorLine + 1]);
+          layerTextData[activeLayer].splice(cursorLine + 1, 1);
         }
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
         updatePlayback(null, cursorLine, cursorCol);
         resetBlink();
         scheduleFrame();
@@ -5208,10 +5625,11 @@
             speakEnglishWord(completedWord, 1.0);
           }
         }
-        const rest = textData[cursorLine].splice(cursorCol);
-        textData.splice(cursorLine + 1, 0, rest);
+        const rest = layerTextData[activeLayer][cursorLine].splice(cursorCol);
+        layerTextData[activeLayer].splice(cursorLine + 1, 0, rest);
         cursorLine++;
         cursorCol = 0;
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
         updatePlayback(null, cursorLine, cursorCol);
         resetBlink();
         scheduleFrame();
@@ -5219,57 +5637,93 @@
       } else if (key === 'ArrowLeft') {
         e.preventDefault();
         if (cursorCol > 0) cursorCol--;
-        else if (cursorLine > 0) { cursorLine--; cursorCol = textData[cursorLine].length; }
+        else if (cursorLine > 0) { cursorLine--; cursorCol = layerTextData[activeLayer][cursorLine].length; }
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
         updatePlayback(null, cursorLine, cursorCol);
         resetBlink(); scheduleFrame();
         scrollCameraToPlayback(false);
       } else if (key === 'ArrowRight') {
         e.preventDefault();
-        if (cursorCol < textData[cursorLine].length) cursorCol++;
-        else if (cursorLine < textData.length - 1) { cursorLine++; cursorCol = 0; }
+        if (cursorCol < layerTextData[activeLayer][cursorLine].length) cursorCol++;
+        else if (cursorLine < layerTextData[activeLayer].length - 1) { cursorLine++; cursorCol = 0; }
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
         updatePlayback(null, cursorLine, cursorCol);
         resetBlink(); scheduleFrame();
         scrollCameraToPlayback(false);
       } else if (key === 'ArrowUp') {
         e.preventDefault();
-        if (cursorLine > 0) { cursorLine--; cursorCol = Math.min(cursorCol, textData[cursorLine].length); }
+        if (cursorLine > 0) { cursorLine--; cursorCol = Math.min(cursorCol, layerTextData[activeLayer][cursorLine].length); }
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
         updatePlayback(null, cursorLine, cursorCol);
         resetBlink(); scheduleFrame();
         scrollCameraToPlayback(false);
       } else if (key === 'ArrowDown') {
         e.preventDefault();
-        if (cursorLine < textData.length - 1) { cursorLine++; cursorCol = Math.min(cursorCol, textData[cursorLine].length); }
+        if (cursorLine < layerTextData[activeLayer].length - 1) { cursorLine++; cursorCol = Math.min(cursorCol, layerTextData[activeLayer][cursorLine].length); }
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
         updatePlayback(null, cursorLine, cursorCol);
         resetBlink(); scheduleFrame();
         scrollCameraToPlayback(false);
       } else if (key === 'Home') {
         e.preventDefault(); cursorCol = 0; clearSelection(); updatePlayback(null, cursorLine, cursorCol); resetBlink(); scheduleFrame(); scrollCameraToPlayback(false);
       } else if (key === 'End') {
-        e.preventDefault(); cursorCol = textData[cursorLine].length; clearSelection(); updatePlayback(null, cursorLine, cursorCol); resetBlink(); scheduleFrame(); scrollCameraToPlayback(false);
+        e.preventDefault(); cursorCol = layerTextData[activeLayer][cursorLine].length; clearSelection(); updatePlayback(null, cursorLine, cursorCol); resetBlink(); scheduleFrame(); scrollCameraToPlayback(false);
       } else if (key.length === 1 && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         if (e.repeat) return;
         const newChar = initCharObj({ char: key, id: charIdCounter++, done: false, kerning: 0, fontSize: FONT_SIZE });
         tagDesktopTyping(newChar);
-        textData[cursorLine].splice(cursorCol, 0, newChar);
+        layerTextData[activeLayer][cursorLine].splice(cursorCol, 0, newChar);
         cursorCol++;
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
         activeKeyChar = newChar;
         activeKeyDownTime = performance.now();
         updatePlayback(newChar, cursorLine, cursorCol);
         triggerCharFlash(newChar);
-        pronounceChar(key, false, newChar.fontType, newChar, { source: 'typing', textData, cursorLine, cursorCol });
+        pronounceChar(key, false, newChar.fontType, newChar, { source: 'typing', layerTextData, cursorLine, cursorCol });
         startAnimation(newChar);
         resetBlink();
         scrollCameraToPlayback(false);
       }
-    });
+    }
 
-    canvas.addEventListener('keyup', (e) => {
+    function handleKeyUp(e) {
       if (activeKeyChar && e.key === activeKeyChar.char) {
         activeKeyChar = null;
         scheduleFrame();
       }
+    }
+
+    canvas.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', (e) => {
+      if (isMobile) return;
+      const activeEl = document.activeElement;
+      if (activeEl === canvas || activeEl === hiddenInput) return;
+      if (activeEl && (activeEl.tagName === 'SELECT' || (activeEl.tagName === 'INPUT' && activeEl.type === 'range'))) {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab', 'Escape'].includes(e.key)) return;
+        activeEl.blur();
+      }
+      canvas.focus();
+      handleKeyDown(e);
     });
+
+    canvas.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keyup', (e) => {
+      if (document.activeElement !== canvas) handleKeyUp(e);
+    });
+
+    const typoCol = document.getElementById('typography-column');
+    if (typoCol) {
+      typoCol.addEventListener('click', (e) => {
+        if (e.target !== canvas) {
+          if (isMobile) {
+            hiddenInput.focus();
+          } else {
+            canvas.focus();
+          }
+        }
+      });
+    }
 
     function handlePointerAt(clientX, clientY) {
       if (!font || lastDisplayLines.length === 0) return;
@@ -5318,6 +5772,7 @@
         }
       }
       cursorCol = dl.srcCol + bestCol;
+      updateLayerCursor(activeLayer, cursorLine, cursorCol);
       clearSelection();
       updatePlayback(null, cursorLine, cursorCol);
       resetBlink(); scheduleFrame();
@@ -5349,8 +5804,9 @@
       clearSelection();
       const newChar = initCharObj({ char: key, id: charIdCounter++, done: false, kerning: 0, fontSize: FONT_SIZE });
       tagDesktopTyping(newChar);
-      textData[cursorLine].splice(cursorCol, 0, newChar);
+      layerTextData[activeLayer][cursorLine].splice(cursorCol, 0, newChar);
       cursorCol++;
+      updateLayerCursor(activeLayer, cursorLine, cursorCol);
       updatePlayback(newChar, cursorLine, cursorCol);
       triggerCharFlash(newChar);
       pronounceChar(key, false, newChar.fontType, newChar, { source: 'typing', textData, cursorLine, cursorCol });
@@ -5371,19 +5827,21 @@
       }
       clearSelection();
       if (cursorCol > 0) {
-        const target = textData[cursorLine][cursorCol - 1];
+        const target = layerTextData[activeLayer][cursorLine][cursorCol - 1];
         if (target && !target.deleting) {
           triggerCharFlash(target);
           pronounceChar(target.char, true, target.fontType, target);
           startDeleteAnimation(target);
           cursorCol--;
+          updateLayerCursor(activeLayer, cursorLine, cursorCol);
         }
       } else if (cursorLine > 0) {
-        const prevLen = textData[cursorLine - 1].length;
-        textData[cursorLine - 1] = textData[cursorLine - 1].concat(textData[cursorLine]);
-        textData.splice(cursorLine, 1);
+        const prevLen = layerTextData[activeLayer][cursorLine - 1].length;
+        layerTextData[activeLayer][cursorLine - 1] = layerTextData[activeLayer][cursorLine - 1].concat(layerTextData[activeLayer][cursorLine]);
+        layerTextData[activeLayer].splice(cursorLine, 1);
         cursorLine--;
         cursorCol = prevLen;
+        updateLayerCursor(activeLayer, cursorLine, cursorCol);
       }
       updatePlayback(null, cursorLine, cursorCol);
       resetBlink();
@@ -5409,7 +5867,7 @@
         e.preventDefault();
         if (selectAll) { deleteAll(); }
         clearSelection();
-        const rest = textData[cursorLine].splice(cursorCol);
+        const rest = layerTextData[activeLayer][cursorLine].splice(cursorCol);
         textData.splice(cursorLine + 1, 0, rest);
         cursorLine++;
         cursorCol = 0;
@@ -5431,6 +5889,18 @@
     loadFont(true).then(() => {
       canvas.focus();
       scheduleFrame();
+      
+      // Initialize audio context for default sound on
+      if (soundEnabled) {
+        const ctx = getDrumCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+        try {
+          const u = new SpeechSynthesisUtterance('');
+          u.volume = 0;
+          window.speechSynthesis.speak(u);
+        } catch (e) {}
+        updateSoundToggleUI();
+      }
     }).catch(err => {
       console.error('Font loading failed:', err);
     });
