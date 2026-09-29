@@ -666,9 +666,9 @@
       <div id="controls">
         <div class="slider-group">
           <div class="slider-header">
-            <label>Font</label>
+            <label>Tone</label>
           </div>
-          <select id="fontSelect" aria-label="Font">
+          <select id="fontSelect" aria-label="Tone">
             <option value="inter" selected>Inter (Electric)</option>
             <option value="roboto-slab">Roboto Slab (Ambient)</option>
             <option value="space-grotesk">Space Grotesk (Alphabet)</option>
@@ -692,9 +692,9 @@
         </div>
         <div class="slider-group" id="secondaryFontGroup" style="display: none;">
           <div class="slider-header">
-            <label>Secondary Font</label>
+            <label>Secondary Tone</label>
           </div>
-          <select id="secondaryFontSelect" aria-label="Secondary Font">
+          <select id="secondaryFontSelect" aria-label="Secondary Tone">
             <option value="roboto-slab" selected>Roboto Slab (Ambient)</option>
             <option value="inter">Inter (Electric)</option>
             <option value="space-grotesk">Space Grotesk (Alphabet)</option>
@@ -795,6 +795,7 @@
           <button id="cameraToggle" class="active" title="Camera scroll follows playback position">Camera: Scroll ON</button>
           <button id="metricsToggle" class="active" title="Show/hide baseline and metric lines">Metrics: ON</button>
           <button id="clockToggle" title="Clock Mode: Display current time as animated typography">Clock: OFF</button>
+          <button id="randomColorToggle" class="active" style="grid-column: 1 / -1;" title="Randomize typeface and background colors on each keystroke">Color: Random ON</button>
           <button id="loopToggle" class="active" style="grid-column: 1 / -1;" title="Loop Engineering: Evolving / Glitch / Ambient / Straight">Loop: Evolving (4-Bar)</button>
           <button id="repeatToggle" class="active" style="grid-column: 1 / -1;" title="Stop or play repeat playback">Repeat: Stop</button>
           <div class="sound-btn-wrap">
@@ -851,7 +852,7 @@
     <div id="letterGrid"></div>
     <div id="mobileToolbar">
       <button id="mClear">CLEAR</button>
-      <button id="mFont">FONT: INTER</button>
+      <button id="mFont">TONE: INTER</button>
       <button id="mPalette">PAL: RED</button>
       <button id="mSound">SOUND: OFF</button>
       <button id="mPolyphony">POLY: OFF</button>
@@ -1963,7 +1964,7 @@
       }
       const mFont = document.getElementById('mFont');
       if (mFont) {
-        mFont.textContent = 'FONT: ' + fontKey.replace('-', ' ').toUpperCase();
+        mFont.textContent = 'TONE: ' + fontKey.replace('-', ' ').toUpperCase();
       }
       if (typeof updateLoopUI === 'function') {
         updateLoopUI();
@@ -3835,9 +3836,64 @@
       return hue;
     }
 
+    /* ===== Random color on typing ===== */
+    let randomColors = true;
+    let rndBg = null;
+    let rndFg = null;
+
+    function hslToRgbStr(h, s, l) {
+      s /= 100; l /= 100;
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))));
+      return f(0) + ', ' + f(8) + ', ' + f(4);
+    }
+
+    function applyRandomColorVars() {
+      const st = document.body.style;
+      if (randomColors && rndBg) {
+        st.setProperty('--bg', 'rgb(' + rndBg + ')');
+        st.setProperty('--fg', 'rgb(' + rndFg + ')');
+        st.setProperty('--fg-90', 'rgba(' + rndFg + ', 0.9)');
+        st.setProperty('--fg-50', 'rgba(' + rndFg + ', 0.5)');
+        st.setProperty('--fg-25', 'rgba(' + rndFg + ', 0.25)');
+        st.setProperty('--fg-20', 'rgba(' + rndFg + ', 0.2)');
+        st.setProperty('--fg-08', 'rgba(' + rndFg + ', 0.08)');
+      } else {
+        ['--bg', '--fg', '--fg-90', '--fg-50', '--fg-25', '--fg-20', '--fg-08'].forEach(v => st.removeProperty(v));
+      }
+    }
+
+    function randomizeColors() {
+      if (!randomColors) return;
+      const h = Math.floor(Math.random() * 360);
+      const lightBg = Math.random() < 0.5;
+      const bgL = lightBg ? 72 + Math.random() * 20 : 6 + Math.random() * 22;
+      rndBg = hslToRgbStr(h, 40 + Math.random() * 50, bgL);
+      const fh = (h + 120 + Math.floor(Math.random() * 120)) % 360;
+      rndFg = hslToRgbStr(fh, 70 + Math.random() * 30, lightBg ? 18 + Math.random() * 14 : 62 + Math.random() * 20);
+      applyRandomColorVars();
+    }
+
+    const randomColorToggle = document.getElementById('randomColorToggle');
+    if (randomColorToggle) {
+      randomColorToggle.addEventListener('click', () => {
+        randomColors = !randomColors;
+        randomColorToggle.textContent = randomColors ? 'Color: Random ON' : 'Color: Random OFF';
+        randomColorToggle.classList.toggle('active', randomColors);
+        applyRandomColorVars();
+        if (typeof drawMatrixCanvas === 'function') drawMatrixCanvas();
+        canvas.focus();
+        scheduleFrame();
+      });
+    }
+
     function getGlyphFillColor(charObj, progress, fadeT, isDeleting, showFill, dark, fgVal) {
       if (isDeleting && progress < 1) {
         return 'rgba(255, 255, 0, 1)';
+      }
+      if (randomColors && rndFg) {
+        return 'rgb(' + rndFg + ')';
       }
 
       // No fill for demo message characters
@@ -5281,8 +5337,9 @@
       const now = performance.now();
       const baseBg = isDark ? 0 : 255;
       const baseFg = isDark ? 255 : 0;
-      const bg = 'rgb(' + baseBg + ',' + baseBg + ',' + baseBg + ')';
-      const fg = baseFg + ', ' + baseFg + ', ' + baseFg;
+      const useRnd = randomColors && rndBg;
+      const bg = useRnd ? 'rgb(' + rndBg + ')' : 'rgb(' + baseBg + ',' + baseBg + ',' + baseBg + ')';
+      const fg = useRnd ? rndFg : baseFg + ', ' + baseFg + ', ' + baseFg;
 
       const scale = FONT_SIZE / font.unitsPerEm;
       const ascender = font.ascender * scale;
@@ -5606,6 +5663,7 @@
         deleteAll();
         const newChar = initCharObj({ char: key, id: charIdCounter++, done: false, kerning: 0, fontSize: FONT_SIZE });
         tagDesktopTyping(newChar);
+        randomizeColors();
         layerTextData[activeLayer][0].push(newChar);
         cursorCol = 1;
         updateLayerCursor(activeLayer, 0, 1);
@@ -5734,6 +5792,7 @@
         if (e.repeat) return;
         const newChar = initCharObj({ char: key, id: charIdCounter++, done: false, kerning: 0, fontSize: FONT_SIZE });
         tagDesktopTyping(newChar);
+        randomizeColors();
         layerTextData[activeLayer][cursorLine].splice(cursorCol, 0, newChar);
         cursorCol++;
         updateLayerCursor(activeLayer, cursorLine, cursorCol);
@@ -5865,6 +5924,7 @@
       clearSelection();
       const newChar = initCharObj({ char: key, id: charIdCounter++, done: false, kerning: 0, fontSize: FONT_SIZE });
       tagDesktopTyping(newChar);
+        randomizeColors();
       layerTextData[activeLayer][cursorLine].splice(cursorCol, 0, newChar);
       cursorCol++;
       updateLayerCursor(activeLayer, cursorLine, cursorCol);
