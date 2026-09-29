@@ -4975,12 +4975,14 @@
       const cx = (xMin + xMax) / 2, cy = (yMin + yMax) / 2;
       const r0 = Math.max(1, Math.hypot(xMax - xMin, yMax - yMin) / 2);
       const e = 1 - Math.pow(1 - t, 3);
-      const R = r0 * (1 + e * 1.6);
-      const m = Math.min(1, e * 1.4);
+      const sc = 1 + e * 1.6;
+      const R = r0 * sc;
+      const m = e * 0.15;
       const map = (px, py) => {
         const dx = px - cx, dy = py - cy;
         const d = Math.hypot(dx, dy) || 1;
-        const rr = d + (R - d) * m;
+        const ds = d * sc;
+        const rr = ds + (R - ds) * m;
         return [cx + dx / d * rr, cy + dy / d * rr];
       };
       const SUB = 8;
