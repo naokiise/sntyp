@@ -4997,7 +4997,7 @@
           const hi = Math.min(lo + 1, WAVE_BINS - 1);
           const fr = binF - lo;
           const amp = waveData[lo] * (1 - fr) + waveData[hi] * fr;
-          d += Math.sin(tr * Math.PI * 6 + nowW * 0.005) * amp * fs * 0.06 * wf;
+          d += Math.sin(tr * Math.PI * 6 + nowW * 0.005) * amp * fs * 0.06 * wf * (1 - e);
         }
         const ds = d * sc;
         const rr = ds + (R - ds) * m;
@@ -5023,13 +5023,14 @@
           px = c.x; py = c.y;
         }
       }
-      const a = (1 - t) * 0.9 * (1 - ri / RIPPLE_COUNT * 0.6);
+      const fall = Math.pow(1 - e, 2.2);
+      const a = fall * 0.95 * (1 - ri / RIPPLE_COUNT * 0.6);
       if (colorPalette === 'rainbow' && !(randomColors && rndFg)) {
         ctx.strokeStyle = 'hsla(' + getCharHue(charObj) + ', 100%, 55%, ' + a.toFixed(3) + ')';
       } else {
         ctx.strokeStyle = 'rgba(' + fg + ', ' + a.toFixed(3) + ')';
       }
-      ctx.lineWidth = 1.5 * (1 - t) + 0.5;
+      ctx.lineWidth = 2.4 * Math.pow(1 - e, 1.5) + 0.25;
       ctx.setLineDash([]);
       ctx.stroke();
       ctx.restore();
