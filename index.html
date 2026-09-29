@@ -4046,7 +4046,7 @@
         const nowCheck = performance.now();
         for (const line of (layerTextData[activeLayer] || textData)) {
           for (const c of line) {
-            if (c.flashTime && (nowCheck - c.flashTime) < Math.max(FLASH_DURATION, RIPPLE_DURATION)) { hasActive = true; break; }
+            if (c.flashTime && (nowCheck - c.flashTime) < Math.max(FLASH_DURATION, RIPPLE_TOTAL)) { hasActive = true; break; }
           }
           if (hasActive) break;
         }
@@ -4957,12 +4957,15 @@
 
     const FLASH_DURATION = 300;
     const RIPPLE_DURATION = 900;
+    const RIPPLE_COUNT = 10;
+    const RIPPLE_STAGGER = 70;
+    const RIPPLE_TOTAL = RIPPLE_DURATION + (RIPPLE_COUNT - 1) * RIPPLE_STAGGER;
 
     // Outline ripple: on sound, the glyph outline morphs into an expanding circle and fades out
     function drawOutlineRipple(glyph, x, baseline, fs, charObj, fg) {
       if (!charObj || !charObj.flashTime) return;
-      const t = (performance.now() - charObj.flashTime) / RIPPLE_DURATION;
-      if (t <= 0 || t >= 1) return;
+      const elapsed = performance.now() - charObj.flashTime;
+      if (elapsed <= 0 || elapsed >= RIPPLE_TOTAL) return;
       const cmds = glyph.getPath(x, baseline, fs).commands;
       if (!cmds.length) return;
       let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
@@ -4974,6 +4977,9 @@
       if (!isFinite(xMin)) return;
       const cx = (xMin + xMax) / 2, cy = (yMin + yMax) / 2;
       const r0 = Math.max(1, Math.hypot(xMax - xMin, yMax - yMin) / 2);
+      for (let ri = 0; ri < RIPPLE_COUNT; ri++) {
+      const t = (elapsed - ri * RIPPLE_STAGGER) / RIPPLE_DURATION;
+      if (t <= 0 || t >= 1) continue;
       const e = 1 - Math.pow(1 - t, 3);
       const sc = 1 + e * 1.6;
       const R = r0 * sc;
@@ -5005,18 +5011,17 @@
           px = c.x; py = c.y;
         }
       }
-      const a = (1 - t) * 0.9;
-      if (colorPalette === 'rainbow') {
+      const a = (1 - t) * 0.9 * (1 - ri / RIPPLE_COUNT * 0.6);
+      if (colorPalette === 'rainbow' && !(randomColors && rndFg)) {
         ctx.strokeStyle = 'hsla(' + getCharHue(charObj) + ', 100%, 55%, ' + a.toFixed(3) + ')';
-      } else if (colorPalette === 'mono') {
-        ctx.strokeStyle = 'rgba(' + fg + ', ' + a.toFixed(3) + ')';
       } else {
-        ctx.strokeStyle = 'rgba(255, 0, 0, ' + a.toFixed(3) + ')';
+        ctx.strokeStyle = 'rgba(' + fg + ', ' + a.toFixed(3) + ')';
       }
       ctx.lineWidth = 1.5 * (1 - t) + 0.5;
       ctx.setLineDash([]);
       ctx.stroke();
       ctx.restore();
+      }
     }
 
     function triggerFlash() {
