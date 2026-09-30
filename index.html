@@ -666,12 +666,12 @@
             <label>Tone</label>
           </div>
           <select id="fontSelect" aria-label="Tone">
-            <option value="inter" selected>Inter (Electric)</option>
-            <option value="roboto-slab">Roboto Slab (Ambient)</option>
-            <option value="space-grotesk">Space Grotesk (Alphabet)</option>
-            <option value="playfair-display">Playfair Display (English)</option>
-            <option value="reading">Reading (Narrator)</option>
-            <option value="morse">Morse Code (Dots/Dashes)</option>
+            <option value="inter" selected>Electric</option>
+            <option value="roboto-slab">Ambient</option>
+            <option value="space-grotesk">Alphabet</option>
+            <option value="playfair-display">English</option>
+            <option value="reading">Narrator</option>
+            <option value="morse">Morse</option>
           </select>
         </div>
         <div class="slider-group">
@@ -692,10 +692,10 @@
             <label>Secondary Tone</label>
           </div>
           <select id="secondaryFontSelect" aria-label="Secondary Tone">
-            <option value="roboto-slab" selected>Roboto Slab (Ambient)</option>
-            <option value="inter">Inter (Electric)</option>
-            <option value="space-grotesk">Space Grotesk (Alphabet)</option>
-            <option value="playfair-display">Playfair Display (English)</option>
+            <option value="roboto-slab" selected>Ambient</option>
+            <option value="inter">Electric</option>
+            <option value="space-grotesk">Alphabet</option>
+            <option value="playfair-display">English</option>
           </select>
         </div>
         <div class="slider-group">
@@ -745,12 +745,12 @@
             <span class="slider-val" id="active-layer-val">Inter</span>
           </div>
           <select id="activeLayerSelect" aria-label="Active Layer">
-            <option value="inter" selected>Inter (Electric)</option>
-            <option value="roboto-slab">Roboto Slab (Ambient)</option>
-            <option value="space-grotesk">Space Grotesk (Alphabet)</option>
-            <option value="playfair-display">Playfair Display (English)</option>
-            <option value="reading">Reading (Narrator)</option>
-            <option value="morse">Morse Code (Dots/Dashes)</option>
+            <option value="inter" selected>Electric</option>
+            <option value="roboto-slab">Ambient</option>
+            <option value="space-grotesk">Alphabet</option>
+            <option value="playfair-display">English</option>
+            <option value="reading">Narrator</option>
+            <option value="morse">Morse</option>
           </select>
         </div>
         <div class="slider-group">
@@ -778,7 +778,6 @@
           <button id="fillToggle" class="active">Fill: ON</button>
           <button id="fadeToggle" class="active">Fade: ON</button>
           <button id="matrixToggle" class="active">Matrix: Curve</button>
-          <button id="cameraToggle" class="active" title="Camera scroll follows playback position">Camera: Scroll ON</button>
           <button id="metricsToggle" class="active" title="Show/hide baseline and metric lines">Metrics: ON</button>
           <button id="clockToggle" title="Clock Mode: Display current time as animated typography">Clock: OFF</button>
           <button id="randomColorToggle" class="active" style="grid-column: 1 / -1;" title="Randomize typeface and background colors on each keystroke">Color: Random ON</button>
@@ -838,7 +837,7 @@
     <div id="letterGrid"></div>
     <div id="mobileToolbar">
       <button id="mClear">CLEAR</button>
-      <button id="mFont">TONE: INTER</button>
+      <button id="mFont">TONE: ELECTRIC</button>
       <button id="mPalette">PAL: RED</button>
       <button id="mSound">SOUND: OFF</button>
       <button id="mPolyphony">POLY: OFF</button>
@@ -849,7 +848,6 @@
       <button id="mLoop" class="active">LOOP: EVOLV</button>
       <button id="mRepeat" class="active">REPEAT: STOP</button>
       <button id="mFill" class="active">FILL: ON</button>
-      <button id="mCamera" class="active">CAM: ON</button>
       <button id="mMatrix" class="active">MATRIX</button>
       <button id="mSpeed">SPEED: MED</button>
       <button id="mWave">WAVE: 200</button>
@@ -1043,7 +1041,7 @@
         opt.value = layerKey;
         const typeName = getSoundTypeName(layerKey);
         const fontName = getFontDisplayName(layerKey);
-        opt.textContent = `Layer ${idx + 1}: ${fontName} (${typeName})`;
+        opt.textContent = `Layer ${idx + 1}: ${typeName}`;
         activeLayerSelect.appendChild(opt);
       });
       activeLayerSelect.value = activeLayer;
@@ -1075,7 +1073,7 @@
         btn.className = 'layer-tab-btn' + (layerKey === activeLayer ? ' active' : '');
         const typeName = getSoundTypeName(layerKey);
         const fontName = getFontDisplayName(layerKey);
-        btn.innerHTML = `<span class="layer-tab-dot"></span><span>Layer ${idx + 1}: ${fontName} (${typeName})</span>`;
+        btn.innerHTML = `<span class="layer-tab-dot"></span><span>Layer ${idx + 1}: ${typeName}</span>`;
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           updateActiveLayer(layerKey);
@@ -1946,7 +1944,7 @@
       }
       const mFont = document.getElementById('mFont');
       if (mFont) {
-        mFont.textContent = 'TONE: ' + fontKey.replace('-', ' ').toUpperCase();
+        mFont.textContent = 'TONE: ' + typeName.toUpperCase();
       }
       if (typeof updateLoopUI === 'function') {
         updateLoopUI();
