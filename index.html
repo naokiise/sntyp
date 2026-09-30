@@ -63,6 +63,17 @@
       font-weight: 500;
       white-space: nowrap;
     }
+    #site-header .header-left .current-page::after {
+      content: '';
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      margin-left: 2px;
+      vertical-align: -0.14em;
+      background: currentColor;
+      animation: titleCaret 1s steps(1) infinite;
+    }
+    @keyframes titleCaret { 50% { opacity: 0; } }
     #site-header .header-left .current-page {
       color: var(--fg-90);
     }
@@ -663,6 +674,20 @@
     <div class="header-right">
     </div>
   </header>
+  <script>
+    (function () {
+      const el = document.querySelector('#site-header .current-page');
+      if (!el) return;
+      const text = el.textContent;
+      el.textContent = '';
+      let i = 0;
+      (function typeNext() {
+        if (i > text.length) return;
+        el.textContent = text.slice(0, i++);
+        setTimeout(typeNext, i === 1 ? 400 : 90 + Math.random() * 90);
+      })();
+    })();
+  </script>
   <input id="hiddenInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Text input" />
 
   <div id="workspace-grid">
