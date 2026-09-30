@@ -703,69 +703,12 @@
             <option value="space-grotesk">Alphabet</option>
           </select>
         </div>
-        <div class="slider-group">
-          <div class="slider-header">
-            <label>Polyphony</label>
-            <span class="slider-val" id="polyphony-val">OFF</span>
-          </div>
-          <select id="polyphonySelect" aria-label="Polyphony">
-            <option value="off" selected>OFF</option>
-            <option value="ambient-electric">Ambient + Electric</option>
-            <option value="ambient-alphabet">Ambient + Alphabet</option>
-            <option value="electric-alphabet">Electric + Alphabet</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-        <div class="slider-group" id="secondaryFontGroup" style="display: none;">
-          <div class="slider-header">
-            <label>Secondary Tone</label>
-          </div>
-          <select id="secondaryFontSelect" aria-label="Secondary Tone">
-            <option value="roboto-slab" selected>Ambient</option>
-            <option value="inter">Electric</option>
-            <option value="space-grotesk">Alphabet</option>
-          </select>
-        </div>
-        <div class="slider-group">
-          <div class="slider-header">
-            <label>Layer Mode</label>
-            <span class="slider-val" id="layer-mode-val">Single</span>
-          </div>
-          <select id="layerModeSelect" aria-label="Layer Mode">
-            <option value="single" selected>Single Layer</option>
-            <option value="double">Double Layer</option>
-            <option value="blended">Blended</option>
-          </select>
-        </div>
-        <div class="slider-group">
-          <div class="slider-header">
-            <label>Ambient Gradation</label>
-            <span class="slider-val" id="gradation-val">OFF</span>
-          </div>
-          <select id="gradationSelect" aria-label="Ambient Gradation">
-            <option value="off" selected>OFF</option>
-            <option value="energy">Energy Wave</option>
-            <option value="frequency">Frequency Bands</option>
-            <option value="spectrum">Full Spectrum</option>
-          </select>
-        </div>
         <div class="slider-group" id="readingSpeedGroup" style="display: none;">
           <div class="slider-header">
             <label>Reading Speed</label>
             <span class="slider-val" id="reading-speed-val">1.0x</span>
           </div>
           <input type="range" id="readingSpeedSlider" min="0.5" max="2.0" step="0.1" value="1.0" aria-label="Reading Speed" />
-        </div>
-        <div class="slider-group" id="activeLayerGroup">
-          <div class="slider-header">
-            <label>Active Input Layer</label>
-            <span class="slider-val" id="active-layer-val">Inter</span>
-          </div>
-          <select id="activeLayerSelect" aria-label="Active Layer">
-            <option value="inter" selected>Electric</option>
-            <option value="roboto-slab">Ambient</option>
-            <option value="space-grotesk">Alphabet</option>
-          </select>
         </div>
         <div class="slider-group">
           <div class="slider-header">
@@ -795,7 +738,64 @@
           </div>
           <input type="range" id="volumeSlider" min="15" max="100" value="80" aria-label="Volume" />
         </div>
-        <div class="controls-btn-grid">
+        
+        <div class="slider-group">
+          <div class="slider-header">
+            <label>Polyphony</label>
+            <span class="slider-val" id="polyphony-val">OFF</span>
+          </div>
+          <select id="polyphonySelect" aria-label="Polyphony">
+            <option value="off" selected>OFF</option>
+            <option value="ambient-electric">Ambient + Electric</option>
+            <option value="ambient-alphabet">Ambient + Alphabet</option>
+            <option value="electric-alphabet">Electric + Alphabet</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="slider-group" id="secondaryFontGroup" style="display: none;">
+          <div class="slider-header">
+            <label>Secondary Tone</label>
+          </div>
+          <select id="secondaryFontSelect" aria-label="Secondary Tone">
+            <option value="roboto-slab" selected>Ambient</option>
+            <option value="inter">Electric</option>
+            <option value="space-grotesk">Alphabet</option>
+          </select>
+        </div>
+        <div class="slider-group" id="activeLayerGroup">
+          <div class="slider-header">
+            <label>Active Input Layer</label>
+            <span class="slider-val" id="active-layer-val">Inter</span>
+          </div>
+          <select id="activeLayerSelect" aria-label="Active Layer">
+            <option value="inter" selected>Electric</option>
+            <option value="roboto-slab">Ambient</option>
+            <option value="space-grotesk">Alphabet</option>
+          </select>
+        </div>
+        <div class="slider-group">
+          <div class="slider-header">
+            <label>Layer Mode</label>
+            <span class="slider-val" id="layer-mode-val">Single</span>
+          </div>
+          <select id="layerModeSelect" aria-label="Layer Mode">
+            <option value="single" selected>Single Layer</option>
+            <option value="double">Double Layer</option>
+            <option value="blended">Blended</option>
+          </select>
+        </div>
+        <div class="slider-group">
+          <div class="slider-header">
+            <label>Ambient Gradation</label>
+            <span class="slider-val" id="gradation-val">OFF</span>
+          </div>
+          <select id="gradationSelect" aria-label="Ambient Gradation">
+            <option value="off" selected>OFF</option>
+            <option value="energy">Energy Wave</option>
+            <option value="frequency">Frequency Bands</option>
+            <option value="spectrum">Full Spectrum</option>
+          </select>
+        </div><div class="controls-btn-grid">
           <button id="fillToggle" class="active">Fill: ON</button>
           <button id="fadeToggle" class="active">Fade: ON</button>
           <button id="matrixToggle">Sound: Matrix</button>
