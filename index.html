@@ -63,7 +63,7 @@
       font-weight: 500;
       white-space: nowrap;
     }
-    #site-header .header-left .current-page::after {
+    #site-header .header-left .current-page.typing::after {
       content: '';
       display: inline-block;
       width: 2px;
@@ -681,8 +681,9 @@
       function typeLoop() {
         let i = 0;
         el.textContent = '';
+        el.classList.add('typing');
         (function typeNext() {
-          if (i > text.length) { setTimeout(typeLoop, 4000); return; }
+          if (i > text.length) { el.classList.remove('typing'); setTimeout(typeLoop, 60000); return; }
           el.textContent = text.slice(0, i++);
           setTimeout(typeNext, i === 1 ? 400 : 90 + Math.random() * 90);
         })();
