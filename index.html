@@ -744,6 +744,13 @@
         </div>
         <div class="slider-group">
           <div class="slider-header">
+            <label>Frequency = Weight</label>
+            <span class="slider-val" id="freq-val">1.00x (400)</span>
+          </div>
+          <input type="range" id="freqSlider" min="-12" max="12" value="0" step="1" aria-label="Frequency" />
+        </div>
+        <div class="slider-group">
+          <div class="slider-header">
             <label>Wave</label>
             <span class="slider-val" id="wave-val">200</span>
           </div>
@@ -2064,7 +2071,7 @@
         utt.lang = (girlVoice && girlVoice.lang) || 'en-US';
         utt.rate = 1.15;
         // Pitch: higher pitch (1.35x) produces a cheerful, bright girl voice
-        utt.pitch = reverse ? 0.95 : 1.35;
+        utt.pitch = Math.max(0.1, Math.min(2, (reverse ? 0.95 : 1.35) * Math.pow(getUserFreqMul(), 0.6)));
         const vf = volFactor || 1.0;
         utt.volume = Math.max(0.1, Math.min(1.0, getVolume() * vf));
         speechSynthesis.speak(utt);
@@ -2101,7 +2108,7 @@
         osc.type = 'sine';
         const code = ch.charCodeAt(0) || 65;
         // Bright, playful synthesizer chirp to complement the girl voice
-        const baseFreq = 560 + ((code * 31) % 450);
+        const baseFreq = (560 + ((code * 31) % 450)) * getUserFreqMul();
         osc.frequency.setValueAtTime(reverse ? baseFreq * 0.75 : baseFreq, t);
         osc.frequency.exponentialRampToValueAtTime(reverse ? baseFreq * 0.45 : baseFreq * 1.35, t + 0.04);
         f.type = 'bandpass';
@@ -3048,7 +3055,7 @@
       }
 
       const mState = (typeof matrixState !== 'undefined' && matrixState) ? matrixState : { freqMul: 1, decayMul: 1, resonanceMul: 1 };
-      const pitchMul = (reverse ? 0.75 : 1.0) * sf * mState.freqMul;
+      const pitchMul = (reverse ? 0.75 : 1.0) * sf * mState.freqMul * getUserFreqMul();
       const decayMul = ((reverse ? 1.4 : 1.0) / Math.max(0.2, sf)) * mState.decayMul;
       const resMul = mState.resonanceMul;
       if (typeof triggerMatrixPulse === 'function') triggerMatrixPulse();
@@ -3551,7 +3558,7 @@
         noteIdx = Math.max(0, noteIdx - 3);
       }
       const note = AMBIENT_SCALE[noteIdx] || AMBIENT_SCALE[7];
-      let freq = note.freq;
+      let freq = note.freq * getUserFreqMul();
 
       const isLoop = (typeof loopEngine !== 'undefined' && loopEngine.mode !== 'straight' && loopInfo && !reverse);
       if (isLoop) {
@@ -3664,6 +3671,33 @@
       autoCleanup(osc1, osc2, voiceGain, filter, pannerNode, oscSub, oscSubGain, chimeOsc, chimeGain);
     }
 
+    /* ===== Frequency = Weight ===== */
+    let freqSemis = 0;
+    let fontWeight = 400;
+    function getUserFreqMul() { return Math.pow(2, freqSemis / 12); }
+    function weightForSemis(st) {
+      const w = st <= 0 ? 400 + (-st / 12) * 500 : 400 - (st / 12) * 300;
+      return Math.round(w / 100) * 100;
+    }
+    let freqWeightTimer = null;
+    const freqSlider = document.getElementById('freqSlider');
+    if (freqSlider) {
+      freqSlider.addEventListener('input', () => {
+        freqSemis = parseInt(freqSlider.value);
+        const w = weightForSemis(freqSemis);
+        const fv = document.getElementById('freq-val');
+        if (fv) fv.textContent = getUserFreqMul().toFixed(2) + 'x (' + w + ')';
+        if (w !== fontWeight) {
+          fontWeight = w;
+          clearTimeout(freqWeightTimer);
+          freqWeightTimer = setTimeout(() => {
+            loadFont(false).then(() => { scheduleFrame(); });
+          }, 120);
+        }
+        canvas.focus();
+      });
+    }
+
     /* ===== Sustain voice: long-press = longer sound ===== */
     const SUSTAIN_ATTACK = 0.12;
     const SUSTAIN_RELEASE = 0.45;
@@ -3688,21 +3722,21 @@
       if (type === 'roboto-slab') {
         let idx = AMBIENT_KEY_MAP[ch];
         if (idx === undefined) idx = Math.abs(code * 7) % AMBIENT_SCALE.length;
-        const freq = (AMBIENT_SCALE[idx] || AMBIENT_SCALE[7]).freq;
+        const freq = (AMBIENT_SCALE[idx] || AMBIENT_SCALE[7]).freq * getUserFreqMul();
         const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = freq;
         const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 1.003;
         oscs.push(o1, o2);
         f.type = 'lowpass'; f.frequency.value = Math.min(3200, Math.max(500, freq * 3)); f.Q.value = 1.2;
         level = 0.22;
       } else if (type === 'space-grotesk') {
-        const base = 180 + ((code * 37) % 220);
+        const base = (180 + ((code * 37) % 220)) * getUserFreqMul();
         const o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = base;
         oscs.push(o1);
         f.type = 'bandpass'; f.frequency.value = 600 + ((code * 53) % 1400); f.Q.value = 4;
         level = 0.2;
       } else {
         const mState = (typeof matrixState !== 'undefined' && matrixState) ? matrixState : { freqMul: 1, resonanceMul: 1 };
-        const base = 110 * Math.pow(2, (code % 24) / 12) * mState.freqMul;
+        const base = 110 * Math.pow(2, (code % 24) / 12) * mState.freqMul * getUserFreqMul();
         const o1 = ctx.createOscillator(); o1.type = 'square'; o1.frequency.value = base;
         const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = base * 0.5;
         const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 5 + (code % 7);
@@ -4151,18 +4185,48 @@
     const fontCache = {};
     let secondaryFont = null;
 
+    const FONT_WEIGHTS = {
+      'inter': [100, 200, 300, 400, 500, 600, 700, 800, 900],
+      'roboto-slab': [100, 200, 300, 400, 500, 600, 700, 800, 900],
+      'space-grotesk': [300, 400, 500, 600, 700]
+    };
+    const fontCacheWeight = {};
+
+    function nearestWeight(key, w) {
+      const list = FONT_WEIGHTS[key];
+      if (!list) return 400;
+      let best = list[0];
+      for (const x of list) if (Math.abs(x - w) < Math.abs(best - w)) best = x;
+      return best;
+    }
+
     async function fetchSingleFont(key) {
-      if (fontCache[key]) return fontCache[key];
-      const candidates = FONT_SOURCES[key] || FONT_SOURCES.inter;
+      const w = nearestWeight(key, fontWeight);
+      if (fontCache[key] && fontCacheWeight[key] === w) return fontCache[key];
+      const ck = key + '@' + w;
+      if (window.EMBEDDED_FONTS && window.EMBEDDED_FONTS[ck]) {
+        try {
+          const bin = atob(window.EMBEDDED_FONTS[ck]);
+          const buf = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+          const parsed = opentype.parse(buf.buffer);
+          if (parsed) { fontCache[key] = parsed; fontCacheWeight[key] = w; return parsed; }
+        } catch (e) { console.error('embedded font failed', ck, e); }
+      }
+      const candidates = [];
+      if (FONT_WEIGHTS[key]) candidates.push('https://cdn.jsdelivr.net/npm/@fontsource/' + key + '@5/files/' + key + '-latin-' + w + '-normal.woff');
+      candidates.push(...(FONT_SOURCES[key] || FONT_SOURCES.inter));
       for (const url of candidates) {
         try {
           const loaded = await opentype.load(url);
           if (loaded) {
             fontCache[key] = loaded;
+            fontCacheWeight[key] = w;
             return loaded;
           }
         } catch (e) {}
       }
+      if (fontCache[key]) return fontCache[key];
       if (key !== 'inter') return fetchSingleFont('inter');
       return null;
     }
@@ -4258,9 +4322,7 @@
       const fontsToLoad = new Set([key, activeLayer, ...polyLayers]);
       
       for (const k of fontsToLoad) {
-        if (!fontCache[k]) {
-          await fetchSingleFont(k);
-        }
+        await fetchSingleFont(k);
       }
 
       font = fontCache[activeLayer] || fontCache[key] || fontCache['inter'];
@@ -4268,7 +4330,7 @@
       // Load secondary font if polyphony is enabled
       if (polyphonyMode !== 'off' && layerMode !== 'single') {
         const secKey = polyLayers.find(k => k !== activeLayer) || secondaryFontKey || 'roboto-slab';
-        let secLoaded = fontCache[secKey] || await fetchSingleFont(secKey);
+        let secLoaded = await fetchSingleFont(secKey);
         if (!secLoaded) secLoaded = await fetchSingleFont('inter');
         secondaryFont = secLoaded;
       } else {
