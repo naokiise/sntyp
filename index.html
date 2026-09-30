@@ -176,10 +176,9 @@
       width: 100%;
     }
     .slider-group label {
-      font-size: 14px;
+      font-size: 12px;
       opacity: 0.45;
-      text-transform: none;
-      font-variant-caps: all-small-caps;
+      text-transform: lowercase;
       letter-spacing: 0.08em;
     }
     .slider-group input[type="range"] {
@@ -239,7 +238,7 @@
       width: 100%;
       text-align: center;
       padding: 7px 8px;
-      font-size: 13px;
+      font-size: 11px;
       white-space: normal;
       min-width: 0;
     }
@@ -256,11 +255,10 @@
       border: 1px solid var(--fg-25);
       color: var(--fg-50);
       padding: 6px 12px;
-      font-size: 14px;
+      font-size: 12px;
       border-radius: 4px;
       cursor: pointer;
-      text-transform: none;
-      font-variant-caps: all-small-caps;
+      text-transform: lowercase;
       letter-spacing: 0.08em;
       -webkit-tap-highlight-color: transparent;
     }
@@ -271,6 +269,9 @@
     button.active {
       border-color: var(--fg-50);
       color: var(--fg);
+    }
+    #ui-column, #ui-column select, #ui-column option, #ui-column button, #layer-tabs-bar, #mobileToolbar button, .grid-cell {
+      text-transform: lowercase;
     }
     #hiddenInput {
       position: fixed;
@@ -303,12 +304,11 @@
       box-sizing: border-box;
     }
     .layer-bar-title {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.08em;
       opacity: 0.5;
-      text-transform: none;
-      font-variant-caps: all-small-caps;
+      text-transform: lowercase;
       white-space: nowrap;
     }
     #layer-tabs-container {
@@ -420,11 +420,10 @@
       gap: 8px;
     }
     .matrix-title {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.08em;
-      text-transform: none;
-      font-variant-caps: all-small-caps;
+      text-transform: lowercase;
       color: var(--fg-90);
     }
     .matrix-readouts {
@@ -448,15 +447,14 @@
       gap: 4px;
     }
     .m-preset-btn {
-      font-size: 12px;
+      font-size: 10px;
       padding: 3px 6px;
       border-radius: 4px;
       border: 1px solid var(--fg-25);
       background: transparent;
       color: var(--fg-70);
       cursor: pointer;
-      text-transform: none;
-      font-variant-caps: all-small-caps;
+      text-transform: lowercase;
       letter-spacing: 0.05em;
       transition: all 0.15s ease;
     }
@@ -488,12 +486,11 @@
     .matrix-axis-labels {
       display: flex;
       justify-content: space-between;
-      font-size: 10px;
+      font-size: 9px;
       color: var(--fg-50);
       letter-spacing: 0.05em;
       margin-top: 4px;
-      text-transform: none;
-      font-variant-caps: all-small-caps;
+      text-transform: lowercase;
     }
 
     /* Mobile Patatap-style grid */
