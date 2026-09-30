@@ -734,10 +734,10 @@
         </div>
         <div class="slider-group">
           <div class="slider-header">
-            <label>Kerning = Speed</label>
-            <span class="slider-val" id="kerning-val">-4 (138 BPM)</span>
+            <label>Speed</label>
+            <span class="slider-val" id="kerning-val">138 BPM</span>
           </div>
-          <input type="range" id="kerningSlider" min="-20" max="25" value="-4" aria-label="Kerning = Speed" />
+          <input type="range" id="kerningSlider" min="-20" max="25" value="-4" aria-label="Speed" />
         </div>
         <div class="slider-group">
           <div class="slider-header">
@@ -764,10 +764,6 @@
           <button id="repeatToggle" class="active" style="grid-column: 1 / -1;" title="Stop or play repeat playback">Repeat: Stop</button>
           <div class="sound-btn-wrap">
             <button id="soundToggle">Sound: OFF</button>
-            <div id="sound-hint">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-              try hear the sound of typing
-            </div>
           </div>
         </div>
       </div>
@@ -882,7 +878,7 @@
     let lastClockTime = '';
     let gradationMode = 'off';
     let showMetrics = true;
-    let kerningMode = 'optical';
+    let kerningMode = 'combined';
 
     function updateFillState(active) {
       showFill = !!active;
@@ -3684,7 +3680,7 @@
     function updateKerningUI() {
       const bpm = getSequencerBPM();
       const sign = globalKerning > 0 ? '+' : '';
-      if (kerningVal) kerningVal.textContent = `${sign}${globalKerning} (${bpm} BPM)`;
+      if (kerningVal) kerningVal.textContent = `${bpm} BPM`;
       if (speedVal) speedVal.textContent = getSpeed();
     }
 
