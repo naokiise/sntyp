@@ -2926,9 +2926,21 @@
           realSignal = true;
           audioEnergyTarget = re;
           if (isAmbient) {
-            // Smooth across time and spatial neighbors for a gentle rolling wave profile
-            for (let i = 0; i < n; i++) {
-              const raw = analyserData[i] / 255;
+            // Ambient energy sits in the low bins: map bins logarithmically across the whole
+            // outline radius so the entire glyph ripples, then smooth over time and space
+            const loBin = 1, hiBin = Math.min(n - 1, 12);
+            let peak = 0;
+            const tmp = new Float32Array(WAVE_BINS);
+            for (let i = 0; i < WAVE_BINS; i++) {
+              const pos = Math.exp(Math.log(loBin) + (Math.log(hiBin) - Math.log(loBin)) * (i / (WAVE_BINS - 1)));
+              const b0 = Math.floor(pos), b1 = Math.min(hiBin, b0 + 1), fr = pos - b0;
+              const v = (analyserData[b0] * (1 - fr) + analyserData[b1] * fr) / 255;
+              tmp[i] = v;
+              if (v > peak) peak = v;
+            }
+            const norm = peak > 0.02 ? Math.min(3, 0.8 / peak) : 1;
+            for (let i = 0; i < WAVE_BINS; i++) {
+              const raw = Math.min(1, Math.min(1, tmp[i] * norm) * re * 1.2);
               waveData[i] += (raw - waveData[i]) * 0.18;
             }
             for (let i = 1; i < n - 1; i++) {
