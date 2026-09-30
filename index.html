@@ -3662,6 +3662,95 @@
       autoCleanup(osc1, osc2, voiceGain, filter, pannerNode, oscSub, oscSubGain, chimeOsc, chimeGain);
     }
 
+    /* ===== Sustain voice: long-press = longer sound ===== */
+    const SUSTAIN_ATTACK = 0.12;
+    const SUSTAIN_RELEASE = 0.45;
+    const SUSTAIN_MAX = 6.0;
+    const SUSTAIN_MIN_HOLD = 120;
+
+    function startSustain(charObj) {
+      if (!soundEnabled || !charObj || typeof charObj.char !== 'string') return null;
+      const ctx = getDrumCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+      const t = ctx.currentTime;
+      const type = charObj.fontType || getActiveFontKey();
+      const ch = charObj.char.toLowerCase();
+      const code = ch.charCodeAt(0) || 65;
+      const vf = getCharVolFactor(charObj) * (polyphonyMode !== 'off' ? 0.7 : 1);
+      const out = getDrumOutput();
+      const g = ctx.createGain();
+      const f = ctx.createBiquadFilter();
+      const oscs = [];
+      let level = 0.16;
+
+      if (type === 'roboto-slab') {
+        let idx = AMBIENT_KEY_MAP[ch];
+        if (idx === undefined) idx = Math.abs(code * 7) % AMBIENT_SCALE.length;
+        const freq = (AMBIENT_SCALE[idx] || AMBIENT_SCALE[7]).freq;
+        const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = freq;
+        const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 1.003;
+        oscs.push(o1, o2);
+        f.type = 'lowpass'; f.frequency.value = Math.min(3200, Math.max(500, freq * 3)); f.Q.value = 1.2;
+        level = 0.22;
+      } else if (type === 'space-grotesk') {
+        const base = 180 + ((code * 37) % 220);
+        const o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = base;
+        oscs.push(o1);
+        f.type = 'bandpass'; f.frequency.value = 600 + ((code * 53) % 1400); f.Q.value = 4;
+        level = 0.2;
+      } else {
+        const mState = (typeof matrixState !== 'undefined' && matrixState) ? matrixState : { freqMul: 1, resonanceMul: 1 };
+        const base = 110 * Math.pow(2, (code % 24) / 12) * mState.freqMul;
+        const o1 = ctx.createOscillator(); o1.type = 'square'; o1.frequency.value = base;
+        const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = base * 0.5;
+        const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 5 + (code % 7);
+        const lfoG = ctx.createGain(); lfoG.gain.value = base * 0.015;
+        lfo.connect(lfoG); lfoG.connect(o1.frequency);
+        oscs.push(o1, o2, lfo);
+        f.type = 'lowpass'; f.frequency.value = Math.min(6000, base * 6); f.Q.value = Math.min(12, 3 * mState.resonanceMul);
+        level = 0.12;
+      }
+
+      const peak = level * getVolume() * vf;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(peak, t + SUSTAIN_ATTACK);
+      oscs.forEach((o, i) => { if (!(type !== 'roboto-slab' && type !== 'space-grotesk' && i === 2)) o.connect(f); o.start(t); });
+      f.connect(g);
+      g.connect(out);
+      if (type === 'roboto-slab') g.connect(getAmbientBus(ctx));
+
+      let stopped = false;
+      const stop = (when) => {
+        if (stopped) return;
+        stopped = true;
+        const tt = Math.max(ctx.currentTime, when || ctx.currentTime);
+        try {
+          g.gain.cancelScheduledValues(tt);
+          g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), tt);
+          g.gain.exponentialRampToValueAtTime(0.0001, tt + SUSTAIN_RELEASE);
+        } catch (e) {}
+        oscs.forEach(o => { try { o.stop(tt + SUSTAIN_RELEASE + 0.05); } catch (e) {} });
+        setTimeout(() => { try { f.disconnect(); g.disconnect(); } catch (e) {} }, (tt - ctx.currentTime + SUSTAIN_RELEASE + 0.2) * 1000);
+      };
+      const safety = setTimeout(() => stop(), SUSTAIN_MAX * 1000);
+      return { stop: (when) => { clearTimeout(safety); stop(when); } };
+    }
+
+    function releaseSustain(charObj) {
+      if (!charObj || !charObj._sustain) return;
+      if (charObj._holdStart) charObj.holdMs = performance.now() - charObj._holdStart;
+      charObj._sustain.stop();
+      charObj._sustain = null;
+    }
+
+    function playSustainFor(charObj) {
+      if (!charObj || !charObj.holdMs || charObj.holdMs < SUSTAIN_MIN_HOLD) return;
+      const h = startSustain(charObj);
+      if (!h) return;
+      const ctx = getDrumCtx();
+      h.stop(ctx.currentTime + Math.min(SUSTAIN_MAX, charObj.holdMs / 1000));
+    }
+
     let globalKerning = -4;
 
     function getSequencerBPM() {
@@ -5189,6 +5278,7 @@
                 ch.doneTime = null;
                 startAnimation(ch);
                 pronounceChar(ch.char, false, ch.fontType, ch, { source: 'autoplay' });
+                playSustainFor(ch);
                 triggerCharFlash(ch);
               }
             }
@@ -5217,6 +5307,7 @@
             updatePlayback(ch, autoplayLine, autoplayIndex);
             startAnimation(ch);
             pronounceChar(ch.char, false, ch.fontType, ch, { source: 'autoplay', line, index: autoplayIndex });
+            playSustainFor(ch);
             triggerCharFlash(ch);
             scheduleFrame();
             scrollCameraToPlayback(autoplayLine === 0 && autoplayIndex === 0);
@@ -5664,7 +5755,10 @@
         layerTextData[activeLayer][0].push(newChar);
         cursorCol = 1;
         updateLayerCursor(activeLayer, 0, 1);
+        if (activeKeyChar) releaseSustain(activeKeyChar);
         activeKeyChar = newChar;
+        newChar._holdStart = performance.now();
+        newChar._sustain = startSustain(newChar);
         activeKeyDownTime = performance.now();
         updatePlayback(newChar, 0, 1);
         triggerCharFlash(newChar);
@@ -5793,7 +5887,10 @@
         layerTextData[activeLayer][cursorLine].splice(cursorCol, 0, newChar);
         cursorCol++;
         updateLayerCursor(activeLayer, cursorLine, cursorCol);
+        if (activeKeyChar) releaseSustain(activeKeyChar);
         activeKeyChar = newChar;
+        newChar._holdStart = performance.now();
+        newChar._sustain = startSustain(newChar);
         activeKeyDownTime = performance.now();
         updatePlayback(newChar, cursorLine, cursorCol);
         triggerCharFlash(newChar);
@@ -5806,6 +5903,7 @@
 
     function handleKeyUp(e) {
       if (activeKeyChar && e.key === activeKeyChar.char) {
+        releaseSustain(activeKeyChar);
         activeKeyChar = null;
         scheduleFrame();
       }
