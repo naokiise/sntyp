@@ -651,9 +651,6 @@
       <span class="current-page">sonitype</span>
     </div>
     <div class="header-right">
-      <button id="themeBtn" class="header-icon" title="Toggle theme">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-      </button>
     </div>
   </header>
   <input id="hiddenInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Text input" />
@@ -723,17 +720,6 @@
             <span class="slider-val" id="reading-speed-val">1.0x</span>
           </div>
           <input type="range" id="readingSpeedSlider" min="0.5" max="2.0" step="0.1" value="1.0" aria-label="Reading Speed" />
-        </div>
-        <div class="slider-group">
-          <div class="slider-header">
-            <label>Color Palette</label>
-            <span class="slider-val" id="palette-val">Red → Black</span>
-          </div>
-          <select id="paletteSelect" aria-label="Color Palette">
-            <option value="red-black" selected>Red → Black</option>
-            <option value="mono">Black and White</option>
-            <option value="rainbow">Rainbow</option>
-          </select>
         </div>
         <div class="slider-group" id="activeLayerGroup">
           <div class="slider-header">
@@ -831,7 +817,6 @@
     <div id="mobileToolbar">
       <button id="mClear">CLEAR</button>
       <button id="mFont">TONE: ELECTRIC</button>
-      <button id="mPalette">PAL: RED</button>
       <button id="mSound">SOUND: OFF</button>
       <button id="mPolyphony">POLY: OFF</button>
       <button id="mLayer">LAYER: SINGLE</button>
@@ -874,8 +859,8 @@
     const sunSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
     const moonSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
     document.body.classList.add('dark');
-    themeBtn.innerHTML = sunSVG;
-    themeBtn.addEventListener('click', () => {
+    if (themeBtn) themeBtn.innerHTML = sunSVG;
+    if (themeBtn) themeBtn.addEventListener('click', () => {
       isDark = !isDark;
       document.body.classList.toggle('dark', isDark);
       themeBtn.innerHTML = isDark ? sunSVG : moonSVG;
