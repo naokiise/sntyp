@@ -273,6 +273,17 @@
     #ui-column, #ui-column select, #ui-column option, #ui-column button, #layer-tabs-bar, #mobileToolbar button, .grid-cell {
       text-transform: lowercase;
     }
+    #rippleCanvas {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 50;
+      min-height: 0;
+      max-width: none;
+    }
     #hiddenInput {
       position: fixed;
       top: -100px;
@@ -845,6 +856,7 @@
         <span class="layer-bar-hint">[Tab] switch layer</span>
       </div>
       <canvas id="canvas" tabindex="0"></canvas>
+      <canvas id="rippleCanvas" aria-hidden="true"></canvas>
     </main>
   </div>
 
@@ -873,6 +885,8 @@
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    const rippleCanvas = document.getElementById('rippleCanvas');
+    const rctx = rippleCanvas.getContext('2d');
     const hiddenInput = document.getElementById('hiddenInput');
     const speedSlider = document.getElementById('speedSlider');
     const speedVal = document.getElementById('speed-val');
@@ -5173,8 +5187,8 @@
         }
         const wobble = spacing * 0.45 * ((ri + 1) / RIPPLE_COUNT);
 
-        ctx.save();
-        ctx.beginPath();
+        rctx.save();
+        rctx.beginPath();
         for (const it of info) {
           const hole = Math.sign(it.area) !== outSign;
           if (hole && off > Math.sqrt(Math.abs(it.area)) * 0.4) continue;
@@ -5189,23 +5203,23 @@
             d += wobble * Math.sin(q[0] * 0.035 + ri * 0.9) * Math.cos(q[1] * 0.031 - ri * 0.6);
             if (wAmp) d += Math.sin(i / n * Math.PI * 8 + nowW * 0.004 + ri) * wAmp;
             const X = q[0] + nx * d, Y = q[1] + ny * d;
-            if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+            if (i === 0) rctx.moveTo(X, Y); else rctx.lineTo(X, Y);
           }
-          ctx.closePath();
+          rctx.closePath();
         }
         const fade = Math.pow(1 - t, 1.3) * (1 - (ri / RIPPLE_COUNT) * 0.7);
         const a = Math.max(0, fade * 0.95);
         if (colorPalette === 'rainbow' && !(randomColors && rndFg)) {
-          ctx.strokeStyle = 'hsla(' + getCharHue(charObj) + ', 100%, 55%, ' + a.toFixed(3) + ')';
+          rctx.strokeStyle = 'hsla(' + getCharHue(charObj) + ', 100%, 55%, ' + a.toFixed(3) + ')';
         } else {
-          ctx.strokeStyle = 'rgba(' + fg + ', ' + a.toFixed(3) + ')';
+          rctx.strokeStyle = 'rgba(' + fg + ', ' + a.toFixed(3) + ')';
         }
         const isIndex = (ri % 5) === 4;
-        ctx.lineWidth = (isIndex ? 1.8 : 0.8) * (1 - (ri / RIPPLE_COUNT) * 0.5);
-        ctx.lineJoin = 'round';
-        ctx.setLineDash([]);
-        ctx.stroke();
-        ctx.restore();
+        rctx.lineWidth = (isIndex ? 1.8 : 0.8) * (1 - (ri / RIPPLE_COUNT) * 0.5);
+        rctx.lineJoin = 'round';
+        rctx.setLineDash([]);
+        rctx.stroke();
+        rctx.restore();
       }
     }
 
@@ -5601,6 +5615,29 @@
       canvas.style.width = canvasW + 'px';
       canvas.style.height = canvasH + 'px';
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      // Ripple overlay: covers the viewport so contour effects are never cropped by the canvas
+      {
+        const vw = window.innerWidth, vh = window.innerHeight;
+        if (rippleCanvas.width !== Math.round(vw * DPR) || rippleCanvas.height !== Math.round(vh * DPR)) {
+          rippleCanvas.width = Math.round(vw * DPR);
+          rippleCanvas.height = Math.round(vh * DPR);
+        }
+        rctx.restore();
+        rctx.save();
+        rctx.setTransform(1, 0, 0, 1, 0, 0);
+        rctx.clearRect(0, 0, rippleCanvas.width, rippleCanvas.height);
+        const cr = canvas.getBoundingClientRect();
+        const sx = cr.width / canvasW, sy = cr.height / canvasH;
+        const tc = document.getElementById('typography-column');
+        const clipLeft = tc ? tc.getBoundingClientRect().left - 16 : 0;
+        const hdr = document.getElementById('site-header');
+        const clipTop = hdr ? hdr.getBoundingClientRect().bottom : 0;
+        rctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        rctx.beginPath();
+        rctx.rect(clipLeft, clipTop, vw - clipLeft, vh - clipTop);
+        rctx.clip();
+        rctx.setTransform(DPR * sx, 0, 0, DPR * sy, cr.left * DPR, cr.top * DPR);
+      }
 
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, canvasW, canvasH);
