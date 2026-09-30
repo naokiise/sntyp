@@ -669,9 +669,6 @@
             <option value="inter" selected>Electric</option>
             <option value="roboto-slab">Ambient</option>
             <option value="space-grotesk">Alphabet</option>
-            <option value="playfair-display">English</option>
-            <option value="reading">Narrator</option>
-            <option value="morse">Morse</option>
           </select>
         </div>
         <div class="slider-group">
@@ -695,7 +692,6 @@
             <option value="roboto-slab" selected>Ambient</option>
             <option value="inter">Electric</option>
             <option value="space-grotesk">Alphabet</option>
-            <option value="playfair-display">English</option>
           </select>
         </div>
         <div class="slider-group">
@@ -748,9 +744,6 @@
             <option value="inter" selected>Electric</option>
             <option value="roboto-slab">Ambient</option>
             <option value="space-grotesk">Alphabet</option>
-            <option value="playfair-display">English</option>
-            <option value="reading">Narrator</option>
-            <option value="morse">Morse</option>
           </select>
         </div>
         <div class="slider-group">
@@ -2354,7 +2347,7 @@
         
         // Font rotation mode: change font on each loop
         if (this.mode === 'font-rotation' && fontSelect) {
-          const fonts = ['inter', 'roboto-slab', 'space-grotesk', 'playfair-display'];
+          const fonts = ['inter', 'roboto-slab', 'space-grotesk'];
           const currentFont = (fontSelect && fontSelect.value) || 'inter';
           const currentIdx = fonts.indexOf(currentFont);
           
@@ -6865,7 +6858,7 @@
       document.getElementById('mClear').addEventListener('click', mClearAll);
       const mFontBtn = document.getElementById('mFont');
       if (mFontBtn) {
-        const fontKeys = ['inter', 'roboto-slab', 'space-grotesk', 'playfair-display'];
+        const fontKeys = ['inter', 'roboto-slab', 'space-grotesk'];
         mFontBtn.addEventListener('click', async () => {
           const currentKey = getActiveFontKey();
           const nextIdx = (fontKeys.indexOf(currentKey) + 1) % fontKeys.length;
