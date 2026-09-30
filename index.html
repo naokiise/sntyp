@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #fff;
+      --bg: #e6e6e6;
       --fg: #000;
       --fg-90: rgba(0,0,0,0.9);
       --fg-50: rgba(0,0,0,0.5);
@@ -648,7 +648,7 @@
     #sound-hint svg { flex-shrink: 0; }
   </style>
 </head>
-<body class="dark">
+<body>
   <header id="site-header">
     <div class="header-left">
       <span class="current-page">sonitype</span>
@@ -853,11 +853,10 @@
     const soundToggle = document.getElementById('soundToggle');
     const themeBtn = document.getElementById('themeBtn');
 
-    let isDark = true;
+    let isDark = false;
     var animFrameId = null;
     const sunSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
     const moonSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
-    document.body.classList.add('dark');
     if (themeBtn) themeBtn.innerHTML = sunSVG;
     if (themeBtn) themeBtn.addEventListener('click', () => {
       isDark = !isDark;
@@ -5426,7 +5425,7 @@
       updateAnimations();
 
       const now = performance.now();
-      const baseBg = isDark ? 0 : 255;
+      const baseBg = isDark ? 0 : 230;
       const baseFg = isDark ? 255 : 0;
       const useRnd = randomColors && rndBg;
       const bg = useRnd ? 'rgb(' + rndBg + ')' : 'rgb(' + baseBg + ',' + baseBg + ',' + baseBg + ')';
@@ -6325,7 +6324,7 @@
         if (mCanvas.height !== Math.round(canvasH * mDPR)) mCanvas.height = Math.round(canvasH * mDPR);
         mCtx.setTransform(mDPR, 0, 0, mDPR, 0, 0);
 
-        const mBg = isDark ? '#000' : '#fff';
+        const mBg = isDark ? '#000' : '#e6e6e6';
         const mFgVal = isDark ? 255 : 0;
         const mFg = mFgVal + ',' + mFgVal + ',' + mFgVal;
         mCtx.fillStyle = mBg;
