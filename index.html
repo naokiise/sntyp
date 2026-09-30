@@ -1375,10 +1375,6 @@
           layerTextData[activeLayer] = [[]];
           cursorLine = 0;
           cursorCol = 0;
-          dMsgActive = true;
-          dMsgIndex = 0;
-          dMsgCharIdx = 0;
-          dMsgTypeNext();
         }
         canvas.focus();
         if (typeof scheduleFrame === 'function') scheduleFrame();
@@ -3739,7 +3735,7 @@
     let mScheduleRef = null;
     let mMsgStart = null;
     let mMsgActive = false;
-    let dMsgActive = true;
+    let dMsgActive = false;
     let autoplayActive = false;
     let mFontSize = 120;
     let mTextData = null;
@@ -4386,8 +4382,8 @@
       scrollCameraToPlayback(false);
     }
 
-    const dMsgs = ['type and listen'];
-    dMsgActive = true;
+    const dMsgs = [''];
+    dMsgActive = false;
     let dMsgIndex = 0;
     let dMsgCharIdx = 0;
     let dMsgTimer = null;
