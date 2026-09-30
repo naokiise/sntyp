@@ -153,6 +153,12 @@
       min-height: 0;
       height: auto !important;
     }
+    #extraControls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+    }
     #controls {
       width: 100%;
       margin: 0;
@@ -750,6 +756,48 @@
           <input type="range" id="volumeSlider" min="15" max="100" value="80" aria-label="Volume" />
         </div>
         
+        <div class="controls-btn-grid">
+          <button id="fillToggle" class="active">Fill: ON</button>
+          <button id="fadeToggle" class="active">Fade: ON</button>
+          <button id="matrixToggle">Sound: Matrix</button>
+          <button id="metricsToggle" class="active" title="Show/hide baseline and metric lines">Metrics: ON</button>
+          <button id="clockToggle" title="Clock Mode: Display current time as animated typography">Clock: OFF</button>
+          <button id="randomColorToggle" class="active" style="grid-column: 1 / -1;" title="Randomize typeface and background colors on each keystroke">Color: Random ON</button>
+          <button id="repeatToggle" class="active" style="grid-column: 1 / -1;" title="Stop or play repeat playback">Repeat: Stop</button>
+          <div class="sound-btn-wrap">
+            <button id="soundToggle">Sound: OFF</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="soundMatrixPanel">
+        <div class="matrix-box">
+          <div class="matrix-header">
+            <span class="matrix-title">Electric Sound Design // 2D Matrix Curve</span>
+            <div class="matrix-readouts">
+              <span class="m-badge" id="mFreqBadge">FREQ: 1.00x</span>
+              <span class="m-badge" id="mResBadge">RES: 1.00x</span>
+              <span class="m-badge" id="mDecayBadge">DECAY: 1.00x</span>
+              <span class="m-badge" id="mDriveBadge">DRIVE: 0%</span>
+            </div>
+            <div class="matrix-presets">
+              <button class="m-preset-btn" data-preset="balanced">Default</button>
+              <button class="m-preset-btn" data-preset="glitch">Glitch</button>
+              <button class="m-preset-btn active" data-preset="sub">Sub</button>
+              <button class="m-preset-btn" data-preset="fm">FM Ping</button>
+              <button class="m-preset-btn" data-preset="metallic">Metallic</button>
+            </div>
+          </div>
+          <div class="matrix-canvas-wrap">
+            <canvas id="matrixCanvas" width="480" height="180"></canvas>
+            <div class="matrix-axis-labels">
+              <span class="matrix-axis-x">← SUB / LOW &nbsp; &nbsp; HI / TIMBRE →</span>
+              <span class="matrix-axis-y">↑ RES / FM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="extraControls">
         <div class="slider-group">
           <div class="slider-header">
             <label>Polyphony</label>
@@ -806,45 +854,6 @@
             <option value="frequency">Frequency Bands</option>
             <option value="spectrum">Full Spectrum</option>
           </select>
-        </div><div class="controls-btn-grid">
-          <button id="fillToggle" class="active">Fill: ON</button>
-          <button id="fadeToggle" class="active">Fade: ON</button>
-          <button id="matrixToggle">Sound: Matrix</button>
-          <button id="metricsToggle" class="active" title="Show/hide baseline and metric lines">Metrics: ON</button>
-          <button id="clockToggle" title="Clock Mode: Display current time as animated typography">Clock: OFF</button>
-          <button id="randomColorToggle" class="active" style="grid-column: 1 / -1;" title="Randomize typeface and background colors on each keystroke">Color: Random ON</button>
-          <button id="repeatToggle" class="active" style="grid-column: 1 / -1;" title="Stop or play repeat playback">Repeat: Stop</button>
-          <div class="sound-btn-wrap">
-            <button id="soundToggle">Sound: OFF</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="soundMatrixPanel">
-        <div class="matrix-box">
-          <div class="matrix-header">
-            <span class="matrix-title">Electric Sound Design // 2D Matrix Curve</span>
-            <div class="matrix-readouts">
-              <span class="m-badge" id="mFreqBadge">FREQ: 1.00x</span>
-              <span class="m-badge" id="mResBadge">RES: 1.00x</span>
-              <span class="m-badge" id="mDecayBadge">DECAY: 1.00x</span>
-              <span class="m-badge" id="mDriveBadge">DRIVE: 0%</span>
-            </div>
-            <div class="matrix-presets">
-              <button class="m-preset-btn" data-preset="balanced">Default</button>
-              <button class="m-preset-btn" data-preset="glitch">Glitch</button>
-              <button class="m-preset-btn active" data-preset="sub">Sub</button>
-              <button class="m-preset-btn" data-preset="fm">FM Ping</button>
-              <button class="m-preset-btn" data-preset="metallic">Metallic</button>
-            </div>
-          </div>
-          <div class="matrix-canvas-wrap">
-            <canvas id="matrixCanvas" width="480" height="180"></canvas>
-            <div class="matrix-axis-labels">
-              <span class="matrix-axis-x">← SUB / LOW &nbsp; &nbsp; HI / TIMBRE →</span>
-              <span class="matrix-axis-y">↑ RES / FM</span>
-            </div>
-          </div>
         </div>
       </div>
     </aside>
