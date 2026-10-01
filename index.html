@@ -8,6 +8,7 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <script defer src="https://cloud.umami.is/script.js" data-website-id="dc2bae57-f259-4f89-88c9-732fe4076c80"></script>
+  <link rel="stylesheet" href="https://use.typekit.net/kmo6wqh.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -48,7 +49,7 @@
       display: grid;
       grid-template-columns: auto 1fr;
       align-items: center;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'swiss-721-bt', 'Inter', system-ui, sans-serif;
       font-size: 14px;
       position: sticky;
       top: 0;
@@ -314,7 +315,7 @@
       background: var(--fg-08);
       border: 1px solid var(--fg-20);
       font-size: 11px;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'swiss-721-bt', 'Inter', system-ui, sans-serif;
       user-select: none;
       width: 100%;
       max-width: 680px;
@@ -651,7 +652,7 @@
       transform: translateX(-50%);
       background: var(--fg);
       color: var(--bg);
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'swiss-721-bt', 'Inter', system-ui, sans-serif;
       font-size: 12px;
       font-weight: 500;
       padding: 8px 14px;
@@ -4265,7 +4266,67 @@
       return best;
     }
 
+    /* ===== Adobe Fonts (Typekit) glyph sources =====
+       electric -> Swiss 721 BT, alphabet -> Littlebit Dotty Variable.
+       Falls back to the bundled fonts when the kit is not available (e.g. other domains). */
+    const TYPEKIT_CSS = 'https://use.typekit.net/kmo6wqh.css';
+    const TYPEKIT_FONTS = {
+      'inter': { family: 'swiss-721-bt' },
+      'space-grotesk': { family: 'littlebit-dotty-variable' }
+    };
+    let typekitCssPromise = null;
+    const typekitState = {};
+    const typekitFontCache = {};
+
+    async function getTypekitInfo(key) {
+      if (!TYPEKIT_FONTS[key]) return null;
+      if (typekitState[key] !== undefined) return typekitState[key];
+      try {
+        typekitCssPromise = typekitCssPromise || fetch(TYPEKIT_CSS).then(r => r.ok ? r.text() : Promise.reject(r.status));
+        const css = await typekitCssPromise;
+        const fam = TYPEKIT_FONTS[key].family;
+        const urls = {};
+        for (const b of css.split('@font-face')) {
+          if (!b.includes('font-family:"' + fam + '"')) continue;
+          if (!/font-style:\s*normal/.test(b)) continue;
+          const w = parseInt((b.match(/font-weight:\s*(\d+)/) || [])[1] || '400', 10);
+          const m = b.match(/url\("([^"]+)"\)\s*format\("opentype"\)/) || b.match(/url\("([^"]+)"\)\s*format\("woff"\)/);
+          if (m) urls[w] = m[1];
+        }
+        const weights = Object.keys(urls).map(Number).sort((a, b) => a - b);
+        typekitState[key] = weights.length ? { weights, urls } : false;
+      } catch (e) {
+        typekitState[key] = false;
+      }
+      return typekitState[key];
+    }
+
+    async function loadTypekitFont(key) {
+      const tk = await getTypekitInfo(key);
+      if (!tk) return null;
+      let best = tk.weights[0];
+      for (const x of tk.weights) if (Math.abs(x - fontWeight) < Math.abs(best - fontWeight)) best = x;
+      const ck = key + '@tk' + best;
+      if (typekitFontCache[ck]) return { font: typekitFontCache[ck], tag: 'tk' + best };
+      try {
+        const res = await fetch(tk.urls[best]);
+        if (!res.ok) throw new Error(res.status);
+        const parsed = opentype.parse(await res.arrayBuffer());
+        typekitFontCache[ck] = parsed;
+        return { font: parsed, tag: 'tk' + best };
+      } catch (e) {
+        typekitState[key] = false;
+        return null;
+      }
+    }
+
     async function fetchSingleFont(key) {
+      const tkFont = await loadTypekitFont(key);
+      if (tkFont) {
+        fontCache[key] = tkFont.font;
+        fontCacheWeight[key] = tkFont.tag;
+        return tkFont.font;
+      }
       const w = nearestWeight(key, fontWeight);
       if (fontCache[key] && fontCacheWeight[key] === w) return fontCache[key];
       const ck = key + '@' + w;
