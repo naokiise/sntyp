@@ -4267,12 +4267,13 @@
     }
 
     /* ===== Adobe Fonts (Typekit) glyph sources =====
-       electric -> Swiss 721 BT, alphabet -> Littlebit Dotty Variable.
+       electric -> Swiss 721 BT, ambient -> Garamond Premier, alphabet -> Littlebit Dotty Variable.
        Falls back to the bundled fonts when the kit is not available (e.g. other domains). */
     const TYPEKIT_CSS = 'https://use.typekit.net/kmo6wqh.css';
     const TYPEKIT_FONTS = {
-      'inter': { family: 'swiss-721-bt' },
-      'space-grotesk': { family: 'littlebit-dotty-variable' }
+      'inter': { families: ['swiss-721-bt'] },
+      'roboto-slab': { families: ['garamond-premier-pro', 'garamond-premier', 'garamond-premier-pro-display'] },
+      'space-grotesk': { families: ['littlebit-dotty-variable'] }
     };
     let typekitCssPromise = null;
     const typekitState = {};
@@ -4284,9 +4285,10 @@
       try {
         typekitCssPromise = typekitCssPromise || fetch(TYPEKIT_CSS).then(r => r.ok ? r.text() : Promise.reject(r.status));
         const css = await typekitCssPromise;
-        const fam = TYPEKIT_FONTS[key].family;
+        const blocks = css.split('@font-face');
+        const fam = TYPEKIT_FONTS[key].families.find(n => blocks.some(b => b.includes('font-family:"' + n + '"')));
         const urls = {};
-        for (const b of css.split('@font-face')) {
+        for (const b of (fam ? blocks : [])) {
           if (!b.includes('font-family:"' + fam + '"')) continue;
           if (!/font-style:\s*normal/.test(b)) continue;
           const w = parseInt((b.match(/font-weight:\s*(\d+)/) || [])[1] || '400', 10);
