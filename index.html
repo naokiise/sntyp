@@ -755,14 +755,9 @@
           </div>
           <select id="waveShapeSelect" aria-label="Wave Shape">
             <option value="radial" selected>radial</option>
-            <option value="horizontal">horizontal</option>
-            <option value="shear">shear</option>
             <option value="string">string</option>
-            <option value="swirl">swirl</option>
             <option value="breathe">breathe</option>
             <option value="noise">noise</option>
-            <option value="zigzag">zigzag</option>
-            <option value="bitcrush">bitcrush</option>
           </select>
         </div>
         <div class="slider-group">
@@ -4994,22 +4989,10 @@
         const ca = Math.cos(angle), sa = Math.sin(angle);
         let nx = px, ny = py;
         switch (waveShape) {
-          case 'horizontal':
-            ny = py + Math.sin(px * 0.035 + now * 0.006) * base * 1.2;
-            break;
-          case 'shear':
-            nx = px + Math.sin(py * 0.05 + now * 0.006) * base * 1.2;
-            break;
           case 'string': {
             const k = waveIdx++;
             const d = Math.sin(k * 0.55 + now * 0.02) * base;
             nx = px + ca * d; ny = py + sa * d;
-            break;
-          }
-          case 'swirl': {
-            const rot = amp * wf * 1.0 * (1 - t) * Math.sin(now * 0.003 + 1);
-            const cr = Math.cos(rot), sr = Math.sin(rot);
-            nx = cxCenter + dx * cr - dy * sr; ny = cyCenter + dx * sr + dy * cr;
             break;
           }
           case 'breathe': {
@@ -5023,18 +5006,6 @@
             const nz2 = Math.cos(px * 0.037 - now * 0.0021) * Math.sin(py * 0.052 + now * 0.0033);
             nx = px + (ca * nz - sa * nz2 * 0.6) * base * 1.1;
             ny = py + (sa * nz + ca * nz2 * 0.6) * base * 1.1;
-            break;
-          }
-          case 'zigzag': {
-            const sq = Math.sign(Math.sin(t * Math.PI * 10 + now * 0.008)) || 1;
-            const tri = Math.abs(((t * 6 + now * 0.004) % 1) * 2 - 1) * 2 - 1;
-            const d = (sq * 0.6 + tri * 0.4) * base;
-            nx = px + ca * d; ny = py + sa * d;
-            break;
-          }
-          case 'bitcrush': {
-            const g = Math.max(1, base * 0.9);
-            nx = Math.round(px / g) * g; ny = Math.round(py / g) * g;
             break;
           }
           default: {
