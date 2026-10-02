@@ -751,6 +751,22 @@
         </div>
         <div class="slider-group">
           <div class="slider-header">
+            <label>Wave Shape</label>
+          </div>
+          <select id="waveShapeSelect" aria-label="Wave Shape">
+            <option value="radial" selected>radial</option>
+            <option value="horizontal">horizontal</option>
+            <option value="shear">shear</option>
+            <option value="string">string</option>
+            <option value="swirl">swirl</option>
+            <option value="breathe">breathe</option>
+            <option value="noise">noise</option>
+            <option value="zigzag">zigzag</option>
+            <option value="bitcrush">bitcrush</option>
+          </select>
+        </div>
+        <div class="slider-group">
+          <div class="slider-header">
             <label>Volume</label>
             <span class="slider-val" id="volume-val">80%</span>
           </div>
@@ -897,6 +913,15 @@
     const waveSlider = document.getElementById('waveSlider');
     const waveValEl = document.getElementById('wave-val');
     let waveIntensity = 200;
+    let waveShape = 'radial';
+    const waveShapeSelect = document.getElementById('waveShapeSelect');
+    if (waveShapeSelect) {
+      waveShapeSelect.addEventListener('change', () => {
+        waveShape = waveShapeSelect.value;
+        canvas.focus();
+        if (typeof scheduleFrame === 'function') scheduleFrame();
+      });
+    }
     const fadeToggle = document.getElementById('fadeToggle');
     const soundToggle = document.getElementById('soundToggle');
     const themeBtn = document.getElementById('themeBtn');
@@ -4951,6 +4976,7 @@
       }
       const SUB = waveActive ? Math.max(2, Math.round(wf * 10)) : 0;
 
+      let waveIdx = 0;
       function wave(px, py) {
         if (!waveActive) return { x: px + offsetX, y: py + offsetY };
 
@@ -4963,10 +4989,60 @@
         const hi = Math.min(lo + 1, WAVE_BINS - 1);
         const frac = binF - lo;
         const amp = waveData[lo] * (1 - frac) + waveData[hi] * frac;
-        const phase = t * Math.PI * 6 + now * 0.005;
-        const displacement = Math.sin(phase) * amp * fs * 0.06 * wf;
+        const base = amp * fs * 0.06 * wf;
         const angle = Math.atan2(dy, dx);
-        return { x: px + Math.cos(angle) * displacement + offsetX, y: py + Math.sin(angle) * displacement + offsetY };
+        const ca = Math.cos(angle), sa = Math.sin(angle);
+        let nx = px, ny = py;
+        switch (waveShape) {
+          case 'horizontal':
+            ny = py + Math.sin(px * 0.035 + now * 0.006) * base * 1.2;
+            break;
+          case 'shear':
+            nx = px + Math.sin(py * 0.05 + now * 0.006) * base * 1.2;
+            break;
+          case 'string': {
+            const k = waveIdx++;
+            const d = Math.sin(k * 0.55 + now * 0.02) * base;
+            nx = px + ca * d; ny = py + sa * d;
+            break;
+          }
+          case 'swirl': {
+            const rot = amp * wf * 1.0 * (1 - t) * Math.sin(now * 0.003 + 1);
+            const cr = Math.cos(rot), sr = Math.sin(rot);
+            nx = cxCenter + dx * cr - dy * sr; ny = cyCenter + dx * sr + dy * cr;
+            break;
+          }
+          case 'breathe': {
+            const sc = 1 + amp * wf * 0.15;
+            nx = cxCenter + dx * sc; ny = cyCenter + dy * sc;
+            break;
+          }
+          case 'noise': {
+            const nz = Math.sin(px * 0.05 + now * 0.003) * Math.cos(py * 0.043 - now * 0.0025)
+                     + 0.5 * Math.sin((px + py) * 0.021 + now * 0.004);
+            const nz2 = Math.cos(px * 0.037 - now * 0.0021) * Math.sin(py * 0.052 + now * 0.0033);
+            nx = px + (ca * nz - sa * nz2 * 0.6) * base * 1.1;
+            ny = py + (sa * nz + ca * nz2 * 0.6) * base * 1.1;
+            break;
+          }
+          case 'zigzag': {
+            const sq = Math.sign(Math.sin(t * Math.PI * 10 + now * 0.008)) || 1;
+            const tri = Math.abs(((t * 6 + now * 0.004) % 1) * 2 - 1) * 2 - 1;
+            const d = (sq * 0.6 + tri * 0.4) * base;
+            nx = px + ca * d; ny = py + sa * d;
+            break;
+          }
+          case 'bitcrush': {
+            const g = Math.max(1, base * 0.9);
+            nx = Math.round(px / g) * g; ny = Math.round(py / g) * g;
+            break;
+          }
+          default: {
+            const d = Math.sin(t * Math.PI * 6 + now * 0.005) * base;
+            nx = px + ca * d; ny = py + sa * d;
+          }
+        }
+        return { x: nx + offsetX, y: ny + offsetY };
       }
 
       ctx.beginPath();
