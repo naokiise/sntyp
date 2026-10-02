@@ -1578,6 +1578,7 @@
                 fontSize: FONT_SIZE * 2.0 // Even larger for multi-line display
               });
               layerTextData[activeLayer][lineIndex].push(newChar);
+              if (typeof randomizeColors === 'function') randomizeColors();
 
               // Play sound for each character
               if (soundEnabled) {
