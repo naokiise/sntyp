@@ -5097,14 +5097,16 @@
         }
       }
 
-      if (isDeleting && progress < 1) {
-        ctx.fill();
-      } else if (progress < 1) {
-        ctx.fill();
-      } else if (fadeT < 1) {
-        ctx.fill();
-      } else if (showFill && !isDeleting) {
-        ctx.fill();
+      if (showFill) {
+        if (isDeleting && progress < 1) {
+          ctx.fill();
+        } else if (progress < 1) {
+          ctx.fill();
+        } else if (fadeT < 1) {
+          ctx.fill();
+        } else if (!isDeleting) {
+          ctx.fill();
+        }
       }
 
       // Restore context if shadow was applied
@@ -6833,7 +6835,9 @@
             }
 
             const mFillColor = getGlyphFillColor(charObj, progress, fadeT, isDeleting, mShowFill, isDark, mFg);
-            if (isDeleting && progress < 1) {
+            if (!mShowFill) {
+              // fill off: outline only
+            } else if (isDeleting && progress < 1) {
               mCtx.fillStyle = mFillColor;
               mCtx.fill();
             } else if (progress < 1) {
