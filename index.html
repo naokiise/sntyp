@@ -733,7 +733,7 @@
             <label>Speed</label>
             <span class="slider-val" id="kerning-val">138 BPM</span>
           </div>
-          <input type="range" id="kerningSlider" min="-20" max="25" value="-4" aria-label="Speed" />
+          <input type="range" id="kerningSlider" min="-20" max="25" value="-4" aria-label="Speed" style="direction: rtl;" />
         </div>
         <div class="slider-group">
           <div class="slider-header">
@@ -2994,7 +2994,27 @@
               waveData[i] = waveData[i - 1] * 0.25 + waveData[i] * 0.5 + waveData[i + 1] * 0.25;
             }
           } else {
-            for (let i = 0; i < n; i++) waveData[i] = analyserData[i] / 255;
+            // Electric: log-map the spectrum across the glyph radius, then smooth in time
+            // and space so the outline undulates gently instead of spiking locally
+            const loB = 1, hiB = Math.min(n - 1, 90);
+            const tmpE = new Float32Array(WAVE_BINS);
+            for (let i = 0; i < WAVE_BINS; i++) {
+              const pos = Math.exp(Math.log(loB) + (Math.log(hiB) - Math.log(loB)) * (i / (WAVE_BINS - 1)));
+              const b0 = Math.floor(pos), b1 = Math.min(hiB, b0 + 1), fr = pos - b0;
+              tmpE[i] = (analyserData[b0] * (1 - fr) + analyserData[b1] * fr) / 255;
+            }
+            for (let pass = 0; pass < 4; pass++) {
+              for (let i = 1; i < WAVE_BINS - 1; i++) {
+                tmpE[i] = tmpE[i - 1] * 0.25 + tmpE[i] * 0.5 + tmpE[i + 1] * 0.25;
+              }
+            }
+            let meanE = 0;
+            for (let i = 0; i < WAVE_BINS; i++) meanE += tmpE[i];
+            meanE /= WAVE_BINS;
+            for (let i = 0; i < WAVE_BINS; i++) {
+              const target = (tmpE[i] * 0.45 + meanE * 0.55) * 0.8;
+              waveData[i] += (target - waveData[i]) * 0.3;
+            }
           }
           for (let b = 0; b < 4; b++) bands[b] /= (quarter * 255);
           audioBands = bands;
