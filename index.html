@@ -844,18 +844,6 @@
             <option value="blended">Blended</option>
           </select>
         </div>
-        <div class="slider-group">
-          <div class="slider-header">
-            <label>Ambient Gradation</label>
-            <span class="slider-val" id="gradation-val">OFF</span>
-          </div>
-          <select id="gradationSelect" aria-label="Ambient Gradation">
-            <option value="off" selected>OFF</option>
-            <option value="energy">Energy Wave</option>
-            <option value="frequency">Frequency Bands</option>
-            <option value="spectrum">Full Spectrum</option>
-          </select>
-        </div>
       </div>
     </aside>
 
@@ -879,7 +867,6 @@
       <button id="mSound">SOUND: OFF</button>
       <button id="mPolyphony">POLY: OFF</button>
       <button id="mLayer">LAYER: SINGLE</button>
-      <button id="mGradation">GRAD: OFF</button>
       <button id="mMetrics">METRICS: ON</button>
       <button id="mClock">CLOCK: OFF</button>
       <button id="mRepeat" class="active">REPEAT: STOP</button>
@@ -5322,7 +5309,10 @@
     }
 
     window.triggerCharFlash = function(charObj) {
-      if (charObj) charObj.flashTime = performance.now();
+      if (charObj) {
+        charObj.flashTime = performance.now();
+        charObj.flashHue = Math.floor(Math.random() * 360);
+      }
     };
 
     let lastDesktopTypeAt = 0;
@@ -5784,7 +5774,7 @@
                 } else if (colorPalette === 'mono') {
                   flashStyle = 'rgba(' + fg + ', ' + (ft * 0.35).toFixed(3) + ')';
                 } else {
-                  flashStyle = 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
+                  flashStyle = (randomColors && typeof charObj.flashHue === 'number') ? 'hsla(' + charObj.flashHue + ', 90%, 55%, ' + (ft * 0.8).toFixed(3) + ')' : 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
                 }
                 ctx.fillStyle = flashStyle;
                 const pad = 4;
@@ -6729,7 +6719,7 @@
                 } else if (colorPalette === 'mono') {
                   flashStyle = 'rgba(' + mFg + ', ' + (ft * 0.35).toFixed(3) + ')';
                 } else {
-                  flashStyle = 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
+                  flashStyle = (randomColors && typeof charObj.flashHue === 'number') ? 'hsla(' + charObj.flashHue + ', 90%, 55%, ' + (ft * 0.8).toFixed(3) + ')' : 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
                 }
                 const pad = 4;
                 mCtx.fillStyle = flashStyle;
