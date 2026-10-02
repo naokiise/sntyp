@@ -3993,6 +3993,7 @@
     let randomColors = true;
     let rndBg = null;
     let rndFg = null;
+    let prevRndBg = null;
 
     function hslToRgbStr(h, s, l) {
       s /= 100; l /= 100;
@@ -4020,6 +4021,7 @@
     function randomizeColors() {
       if (!randomColors) return;
       const h = Math.floor(Math.random() * 360);
+      prevRndBg = rndBg;
       const lightBg = Math.random() < 0.5;
       const bgL = lightBg ? 72 + Math.random() * 20 : 6 + Math.random() * 22;
       rndBg = hslToRgbStr(h, 40 + Math.random() * 50, bgL);
@@ -5311,7 +5313,7 @@
     window.triggerCharFlash = function(charObj) {
       if (charObj) {
         charObj.flashTime = performance.now();
-        charObj.flashHue = Math.floor(Math.random() * 360);
+        charObj.flashRgb = (typeof prevRndBg !== 'undefined' && prevRndBg) ? prevRndBg : (isDark ? '0, 0, 0' : '230, 230, 230');
       }
     };
 
@@ -5774,7 +5776,7 @@
                 } else if (colorPalette === 'mono') {
                   flashStyle = 'rgba(' + fg + ', ' + (ft * 0.35).toFixed(3) + ')';
                 } else {
-                  flashStyle = (randomColors && typeof charObj.flashHue === 'number') ? 'hsla(' + charObj.flashHue + ', 90%, 55%, ' + (ft * 0.8).toFixed(3) + ')' : 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
+                  flashStyle = (randomColors && charObj.flashRgb) ? 'rgba(' + charObj.flashRgb + ', ' + (ft * 0.95).toFixed(3) + ')' : 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
                 }
                 ctx.fillStyle = flashStyle;
                 const pad = 4;
@@ -6719,7 +6721,7 @@
                 } else if (colorPalette === 'mono') {
                   flashStyle = 'rgba(' + mFg + ', ' + (ft * 0.35).toFixed(3) + ')';
                 } else {
-                  flashStyle = (randomColors && typeof charObj.flashHue === 'number') ? 'hsla(' + charObj.flashHue + ', 90%, 55%, ' + (ft * 0.8).toFixed(3) + ')' : 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
+                  flashStyle = (randomColors && charObj.flashRgb) ? 'rgba(' + charObj.flashRgb + ', ' + (ft * 0.95).toFixed(3) + ')' : 'rgba(255, 0, 0, ' + (ft * 0.8).toFixed(3) + ')';
                 }
                 const pad = 4;
                 mCtx.fillStyle = flashStyle;
