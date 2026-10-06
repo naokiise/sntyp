@@ -5776,8 +5776,12 @@
         rctx.setTransform(DPR * sx, 0, 0, DPR * sy, cr.left * DPR, cr.top * DPR);
       }
 
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, canvasW, canvasH);
+      if (window.devTransparent) {
+        ctx.clearRect(0, 0, canvasW, canvasH);
+      } else {
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, canvasW, canvasH);
+      }
 
       // Draw metric lines
       for (let mli = 0; mli < overallMaxLines; mli++) {
@@ -7470,6 +7474,124 @@
         updateRepeatUI();
       }
     }
+  </script>
+  <!-- ===== Developer tools (open with ?dev) : transparent background + GIF export ===== -->
+  <script>
+    (function () {
+      if (!new URLSearchParams(location.search).has('dev')) return;
+      window.devTransparent = false;
+      const panel = document.createElement('div');
+      panel.id = 'devPanel';
+      panel.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:300;display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--fg-25);border-radius:6px;background:var(--bg);font:12px system-ui,sans-serif;text-transform:lowercase;';
+      panel.innerHTML = '<span style="opacity:.5">dev</span>'
+        + '<button id="devTransparentBtn" type="button">bg: solid</button>'
+        + '<button id="devGifBtn" type="button">rec gif</button>'
+        + '<span id="devGifStatus" style="opacity:.6"></span>';
+      document.body.appendChild(panel);
+      const tBtn = document.getElementById('devTransparentBtn');
+      const gBtn = document.getElementById('devGifBtn');
+      const status = document.getElementById('devGifStatus');
+      const keepFocus = (e) => e.preventDefault();
+      tBtn.addEventListener('mousedown', keepFocus);
+      gBtn.addEventListener('mousedown', keepFocus);
+
+      tBtn.addEventListener('click', () => {
+        window.devTransparent = !window.devTransparent;
+        tBtn.textContent = window.devTransparent ? 'bg: transparent' : 'bg: solid';
+        tBtn.classList.toggle('active', window.devTransparent);
+        const c = document.getElementById('canvas');
+        c.style.backgroundImage = window.devTransparent
+          ? 'linear-gradient(45deg,rgba(128,128,128,.25) 25%,transparent 25%,transparent 75%,rgba(128,128,128,.25) 75%),linear-gradient(45deg,rgba(128,128,128,.25) 25%,transparent 25%,transparent 75%,rgba(128,128,128,.25) 75%)'
+          : '';
+        c.style.backgroundSize = '16px 16px';
+        c.style.backgroundPosition = '0 0, 8px 8px';
+        if (typeof scheduleFrame === 'function') scheduleFrame();
+      });
+
+      const FPS = 15, MAX_FRAMES = 450, MARGIN = 80, MAX_W = 900;
+      let recording = false, timer = null, frames = [], box = null;
+
+      function startRec() {
+        const c = document.getElementById('canvas');
+        const r = c.getBoundingClientRect();
+        const x = Math.max(0, r.left - MARGIN), y = Math.max(0, r.top - MARGIN);
+        const w = Math.min(window.innerWidth - x, r.width + MARGIN * 2);
+        const h = Math.min(window.innerHeight - y, r.height + MARGIN * 2);
+        const scale = Math.min(1, MAX_W / w);
+        box = { x, y, w, h, ow: Math.round(w * scale), oh: Math.round(h * scale) };
+        frames = [];
+        recording = true;
+        gBtn.textContent = 'stop';
+        gBtn.classList.add('active');
+        const off = document.createElement('canvas');
+        off.width = box.ow; off.height = box.oh;
+        const octx = off.getContext('2d', { willReadFrequently: true });
+        timer = setInterval(() => {
+          const cr = c.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          const sx = box.ow / box.w, sy = box.oh / box.h;
+          octx.clearRect(0, 0, box.ow, box.oh);
+          if (!window.devTransparent) {
+            octx.fillStyle = getComputedStyle(document.body).backgroundColor;
+            octx.fillRect(0, 0, box.ow, box.oh);
+          }
+          octx.drawImage(c, (cr.left - box.x) * sx, (cr.top - box.y) * sy, cr.width * sx, cr.height * sy);
+          const rc = document.getElementById('rippleCanvas');
+          if (rc) octx.drawImage(rc, box.x * dpr, box.y * dpr, box.w * dpr, box.h * dpr, 0, 0, box.ow, box.oh);
+          frames.push(octx.getImageData(0, 0, box.ow, box.oh).data);
+          status.textContent = frames.length + ' f';
+          if (frames.length >= MAX_FRAMES) stopRec();
+        }, 1000 / FPS);
+      }
+
+      async function stopRec() {
+        if (!recording) return;
+        recording = false;
+        clearInterval(timer);
+        gBtn.textContent = 'rec gif';
+        gBtn.classList.remove('active');
+        gBtn.disabled = true;
+        status.textContent = 'encoding…';
+        try {
+          const { GIFEncoder, quantize, applyPalette } = await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js');
+          const gif = GIFEncoder();
+          const transparent = window.devTransparent;
+          for (let i = 0; i < frames.length; i++) {
+            const data = frames[i];
+            const palette = transparent
+              ? quantize(data, 256, { format: 'rgba4444', oneBitAlpha: true })
+              : quantize(data, 256);
+            const index = applyPalette(data, palette, transparent ? 'rgba4444' : 'rgb565');
+            const tIdx = transparent ? palette.findIndex(p => p[3] === 0) : -1;
+            gif.writeFrame(index, box.ow, box.oh, {
+              palette,
+              delay: Math.round(1000 / FPS),
+              repeat: 0,
+              transparent: tIdx >= 0,
+              transparentIndex: Math.max(0, tIdx),
+              dispose: transparent ? 2 : -1
+            });
+            if (i % 10 === 0) { status.textContent = 'encoding ' + Math.round(i / frames.length * 100) + '%'; await new Promise(r => setTimeout(r)); }
+          }
+          gif.finish();
+          const blob = new Blob([gif.bytes()], { type: 'image/gif' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'sonitype-' + new Date().toISOString().replace(/[:.]/g, '-') + '.gif';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          status.textContent = Math.round(blob.size / 1024) + ' KB';
+        } catch (e) {
+          console.error(e);
+          status.textContent = 'error';
+        }
+        frames = [];
+        gBtn.disabled = false;
+      }
+
+      gBtn.addEventListener('click', () => { recording ? stopRec() : startRec(); });
+    })();
   </script>
 </body>
 </html>
