@@ -6806,7 +6806,17 @@
 
         const totalH = displayRows.length * lineH;
         const maxScroll = Math.max(0, totalH + Math.max(0, asc + desc - lineH) + mPadding * 2 - canvasH);
-        if (mFollow) mScrollY = maxScroll;
+        if (mAutoplayActive && mAutoplayIdx >= 0 && maxScroll > 0) {
+          // During playback, glide to the row that is currently sounding
+          let playRow = displayRows.length - 1;
+          for (let ri = 0; ri < displayRows.length; ri++) {
+            if (mAutoplayIdx >= displayRows[ri].start && mAutoplayIdx < displayRows[ri].end) { playRow = ri; break; }
+          }
+          const target = Math.max(0, Math.min(maxScroll, playRow * lineH + lineH / 2 + mPadding - canvasH / 2));
+          mScrollY += (target - mScrollY) * 0.2;
+        } else if (mFollow) {
+          mScrollY = maxScroll;
+        }
         mScrollY = Math.max(0, Math.min(maxScroll, mScrollY));
         mMaxScroll = maxScroll;
         const startY = maxScroll > 0 ? mPadding - mScrollY : Math.max(mPadding, (canvasH - totalH) / 2);
@@ -7222,6 +7232,7 @@
         }
         mAutoplayActive = false;
         mAutoplayIdx = -1;
+        mFollow = true;
         clearTimeout(mAutoplaySeqTimer);
         mAutoplaySeqTimer = null;
         clearTimeout(englishWordTimer);
