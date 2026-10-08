@@ -947,19 +947,23 @@
     <canvas id="mobileCanvas"></canvas>
     <div id="letterGrid"></div>
     <div id="mobileToolbar">
-      <button id="mClear">CLEAR</button>
       <button id="mFont">TONE: ELECTRIC</button>
-      <button id="mSound">SOUND: OFF</button>
-      <button id="mPolyphony">POLY: OFF</button>
-      <button id="mLayer">LAYER: SINGLE</button>
+      <button id="mSpeed">SPEED: 138 BPM</button>
+      <button id="mFreq">FREQUENCY: 1.00x</button>
+      <button id="mWave">WAVE: 500</button>
+      <button id="mWaveShape">WAVE SHAPE: BREATHE</button>
+      <button id="mVol">VOLUME: 80%</button>
+      <button id="mFill" class="active">FILL: ON</button>
+      <button id="mFade" class="active">FADE: ON</button>
+      <button id="mMatrix">SOUND: MATRIX</button>
       <button id="mMetrics">METRICS: ON</button>
       <button id="mClock">CLOCK: OFF</button>
+      <button id="mColor" class="active">COLOR: RANDOM ON</button>
       <button id="mRepeat" class="active">REPEAT: STOP</button>
-      <button id="mFill" class="active">FILL: ON</button>
-      <button id="mMatrix">SOUND: MATRIX</button>
-      <button id="mSpeed">SPEED: MED</button>
-      <button id="mWave">WAVE: 500</button>
-      <button id="mVol">VOL: 80%</button>
+      <button id="mSound">SOUND: ON (ELECTRIC)</button>
+      <button id="mPolyphony">POLYPHONY: OFF</button>
+      <button id="mLayer">LAYER MODE: SINGLE</button>
+      <button id="mClear">CLEAR</button>
     </div>
   </div>
 
@@ -4253,7 +4257,7 @@
       }
       const mVolBtn = document.getElementById('mVol');
       if (mVolBtn) {
-        mVolBtn.textContent = `VOL: ${Math.round(vol * 100)}%`;
+        mVolBtn.textContent = `VOLUME: ${Math.round(vol * 100)}%`;
       }
       if (masterGain) masterGain.gain.value = vol;
       scheduleFrame();
@@ -7357,7 +7361,7 @@
             secondaryFontKey = modes[polyphonyMode] || 'roboto-slab';
           }
           if (window.updatePolyphonyUI) window.updatePolyphonyUI();
-          mPolyphonyBtn.textContent = 'POLY: ' + (polyphonyMode === 'off' ? 'OFF' : polyphonyMode.toUpperCase().replace('-', ' + '));
+          mPolyphonyBtn.textContent = 'POLYPHONY: ' + (polyphonyMode === 'off' ? 'OFF' : polyphonyMode.toUpperCase().replace('-', ' + '));
           if (typeof loadFont === 'function') loadFont(false);
         });
       }
@@ -7371,7 +7375,7 @@
           const nextIdx = (currentIdx + 1) % layerModes.length;
           layerMode = layerModes[nextIdx];
           if (window.updateLayerUI) window.updateLayerUI();
-          mLayerBtn.textContent = 'LAYER: ' + layerMode.toUpperCase();
+          mLayerBtn.textContent = 'LAYER MODE: ' + layerMode.toUpperCase();
           if (typeof scheduleFrame === 'function') scheduleFrame();
         });
       }
@@ -7501,12 +7505,54 @@
           kerningSlider.value = globalKerning;
           updateKerningUI();
         }
-        document.getElementById('mSpeed').textContent = 'SPEED: ' + mSpeedLabels[mSpeedLevel];
+        document.getElementById('mSpeed').textContent = 'SPEED: ' + getSequencerBPM() + ' BPM';
         mSchedule();
       });
 
       const mWaveLevels = [0, 50, 100, 200, 350, 500];
       let mWaveIdx = 5;
+
+      // Extra mobile controls mirroring the desktop menu
+      const mFreqBtn = document.getElementById('mFreq');
+      if (mFreqBtn) {
+        const freqLevels = [-12, -6, 0, 6, 12];
+        let fi = 2;
+        mFreqBtn.addEventListener('click', () => {
+          fi = (fi + 1) % freqLevels.length;
+          if (freqSlider) { freqSlider.value = freqLevels[fi]; freqSlider.dispatchEvent(new Event('input')); }
+          mFreqBtn.textContent = 'FREQUENCY: ' + getUserFreqMul().toFixed(2) + 'x';
+          mSchedule();
+        });
+      }
+      const mWaveShapeBtn = document.getElementById('mWaveShape');
+      if (mWaveShapeBtn) {
+        const shapes = ['radial', 'string', 'breathe', 'noise'];
+        mWaveShapeBtn.addEventListener('click', () => {
+          const next = shapes[(shapes.indexOf(waveShape) + 1) % shapes.length];
+          if (waveShapeSelect) { waveShapeSelect.value = next; waveShapeSelect.dispatchEvent(new Event('change')); }
+          waveShape = next;
+          mWaveShapeBtn.textContent = 'WAVE SHAPE: ' + next.toUpperCase();
+          mSchedule();
+        });
+      }
+      const mFadeBtn = document.getElementById('mFade');
+      if (mFadeBtn) {
+        mFadeBtn.addEventListener('click', () => {
+          fadeToggle.click();
+          mFadeBtn.textContent = fadeEnabled ? 'FADE: ON' : 'FADE: OFF';
+          mFadeBtn.classList.toggle('active', fadeEnabled);
+          mSchedule();
+        });
+      }
+      const mColorBtn = document.getElementById('mColor');
+      if (mColorBtn) {
+        mColorBtn.addEventListener('click', () => {
+          if (randomColorToggle) randomColorToggle.click();
+          mColorBtn.textContent = randomColors ? 'COLOR: RANDOM ON' : 'COLOR: RANDOM OFF';
+          mColorBtn.classList.toggle('active', randomColors);
+          mSchedule();
+        });
+      }
       const mWaveBtn = document.getElementById('mWave');
       mWaveBtn.addEventListener('click', () => {
         mWaveIdx = (mWaveIdx + 1) % mWaveLevels.length;
