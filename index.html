@@ -6531,8 +6531,8 @@
       const mSpeedKernings = [16, -4, -14];
       const mSpeedLabels = ['SLOW', 'MED', 'FAST'];
 
-      const mMessages = ['welcome', 'hear the sound of typography', 'type to make your beat'];
-      mMsgActive = true;
+      const mMessages = [''];
+      mMsgActive = false;
       let mMsgIndex = 0;
       let mMsgCharIdx = 0;
       let mMsgTimer = null;
@@ -7406,8 +7406,6 @@
             mTextData = [[]];
             mCursorLine = 0;
             mCursorCol = 0;
-            // Start mobile message
-            if (typeof mMsgStart === 'function') mMsgStart();
           }
           if (typeof mSchedule === 'function') mSchedule();
         });
