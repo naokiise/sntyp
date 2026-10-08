@@ -680,15 +680,21 @@
 
     /* Patatap-style pads + hidden menu (mobile) */
     #letterGrid.pads {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: 1fr;
+      display: flex;
+      flex-direction: column;
       flex: 0 0 58%;
       max-height: none;
       gap: 1px;
       padding: 0;
       background: var(--fg-08);
     }
+    #letterGrid.pads .pad-row {
+      display: flex;
+      flex: 1;
+      gap: 1px;
+    }
+    #letterGrid.pads .pad-spacer { flex: 0.5; background: var(--bg); }
+    #letterGrid.pads .pad-wide { flex: 1.5; }
     #letterGrid.pads .grid-cell {
       max-width: none;
       border-radius: 0;
@@ -697,7 +703,7 @@
       font-size: 12px;
       align-items: flex-end;
       justify-content: flex-start;
-      padding: 0 0 6px 8px;
+      padding: 0 0 6px 6px;
       text-transform: lowercase;
     }
     #letterGrid.pads .grid-cell.flash,
@@ -6495,15 +6501,30 @@
       const mCtx = mCanvas.getContext('2d');
       const grid = document.getElementById('letterGrid');
 
-      const PADS = 'qwertyuiopasdfghjklzxcvbnm'.split('').concat(['␣', '⌫']);
+      const PAD_ROWS = [
+        'qwertyuiop'.split(''),
+        [null].concat('asdfghjkl'.split(''), [null]),
+        'zxcvbnm'.split('').concat(['⌫']),
+        ['␣']
+      ];
       grid.classList.add('visible', 'pads');
-      PADS.forEach(item => {
-        const cell = document.createElement('div');
-        cell.className = 'grid-cell';
-        cell.dataset.key = item;
-        cell.textContent = item === '␣' ? 'space' : (item === '⌫' ? 'delete' : item);
-        if (item === '⌫' || item === '␣') cell.classList.add('fn');
-        grid.appendChild(cell);
+      PAD_ROWS.forEach(row => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'pad-row';
+        row.forEach(item => {
+          const cell = document.createElement('div');
+          if (item === null) {
+            cell.className = 'pad-spacer';
+          } else {
+            cell.className = 'grid-cell';
+            cell.dataset.key = item;
+            cell.textContent = item === '␣' ? 'space' : (item === '⌫' ? 'del' : item);
+            if (item === '⌫') cell.classList.add('fn', 'pad-wide');
+            if (item === '␣') cell.classList.add('fn');
+          }
+          rowDiv.appendChild(cell);
+        });
+        grid.appendChild(rowDiv);
       });
 
       // Menu button: the toolbar is hidden until opened
