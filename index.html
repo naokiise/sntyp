@@ -523,7 +523,7 @@
       top: 0;
       left: 0;
     }
-    #mobileUI.visible { display: flex; }
+    #mobileUI.visible { display: flex; z-index: 200; }
 
     #mobileCanvas {
       display: block;
@@ -677,6 +677,73 @@
     }
     #sound-hint.show { opacity: 1; pointer-events: auto; }
     #sound-hint svg { flex-shrink: 0; }
+
+    /* Patatap-style pads + hidden menu (mobile) */
+    #letterGrid.pads {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: 1fr;
+      flex: 0 0 58%;
+      max-height: none;
+      gap: 1px;
+      padding: 0;
+      background: var(--fg-08);
+    }
+    #letterGrid.pads .grid-cell {
+      max-width: none;
+      border-radius: 0;
+      background: var(--bg);
+      color: var(--fg-25);
+      font-size: 12px;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 0 0 6px 8px;
+      text-transform: lowercase;
+    }
+    #letterGrid.pads .grid-cell.flash,
+    #letterGrid.pads .grid-cell:active {
+      background: var(--fg);
+      color: var(--bg);
+    }
+    #mobileToolbar { display: none; }
+    #mobileToolbar.open {
+      display: flex;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(72vw, 280px);
+      height: auto;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      padding: 56px 12px 16px;
+      overflow-y: auto;
+      background: var(--bg);
+      border-left: 1px solid var(--fg-20);
+      z-index: 400;
+    }
+    #mobileToolbar.open button {
+      flex: none;
+      border: 1px solid var(--fg-25);
+      padding: 10px 12px;
+      font-size: 12px;
+      text-align: left;
+      color: var(--fg-90);
+      text-transform: lowercase;
+    }
+    #mMenuBtn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 500;
+      padding: 6px 12px;
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--fg-90);
+      border: 1px solid var(--fg-25);
+      text-transform: lowercase;
+    }
   </style>
 </head>
 <body>
@@ -6428,33 +6495,27 @@
       const mCtx = mCanvas.getContext('2d');
       const grid = document.getElementById('letterGrid');
 
-      const ROWS = [
-        ['1','2','3','4','5','6','7','8','9','0'],
-        ['Q','W','E','R','T','Y','U','I','O','P'],
-        ['A','S','D','F','G','H','J','K','L'],
-        ['Z','X','C','V','B','N','M','⌫'],
-        ['!','?',',','␣','.','-','⏎'],
-      ];
+      const PADS = 'abcdefghijklmnopqrstuvwxyz'.split('').concat(['␣', '⌫']);
+      grid.classList.add('visible', 'pads');
+      PADS.forEach(item => {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.dataset.key = item;
+        cell.textContent = item === '␣' ? 'space' : (item === '⌫' ? 'delete' : item);
+        if (item === '⌫' || item === '␣') cell.classList.add('fn');
+        grid.appendChild(cell);
+      });
 
-      ROWS.forEach((row, ri) => {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'kb-row';
-        row.forEach(item => {
-          const cell = document.createElement('div');
-          cell.className = 'grid-cell';
-          cell.textContent = item;
-          cell.dataset.key = item;
-          if (item === '⌫' || item === '⏎') {
-            cell.classList.add('fn');
-            cell.classList.add('wide');
-          }
-          if (item === '␣') {
-            cell.classList.add('space');
-            cell.textContent = 'space';
-          }
-          rowDiv.appendChild(cell);
-        });
-        grid.appendChild(rowDiv);
+      // Menu button: the toolbar is hidden until opened
+      const mToolbar = document.getElementById('mobileToolbar');
+      const mMenuBtn = document.createElement('button');
+      mMenuBtn.id = 'mMenuBtn';
+      mMenuBtn.type = 'button';
+      mMenuBtn.textContent = 'menu';
+      document.getElementById('mobileUI').appendChild(mMenuBtn);
+      mMenuBtn.addEventListener('click', () => {
+        const open = mToolbar.classList.toggle('open');
+        mMenuBtn.textContent = open ? 'close' : 'menu';
       });
 
       mFontSize = Math.min(window.innerWidth * 0.28, Math.max(30, Math.round(120 * (getVolume() / 0.8))));
@@ -6606,9 +6667,9 @@
         if (mCanvas.height !== Math.round(canvasH * mDPR)) mCanvas.height = Math.round(canvasH * mDPR);
         mCtx.setTransform(mDPR, 0, 0, mDPR, 0, 0);
 
-        const mBg = isDark ? '#000' : '#e6e6e6';
+        const mBg = (randomColors && rndBg) ? 'rgb(' + rndBg + ')' : (isDark ? '#000' : '#e6e6e6');
         const mFgVal = isDark ? 255 : 0;
-        const mFg = mFgVal + ',' + mFgVal + ',' + mFgVal;
+        const mFg = (randomColors && rndFg) ? rndFg : (mFgVal + ',' + mFgVal + ',' + mFgVal);
         mCtx.fillStyle = mBg;
         mCtx.fillRect(0, 0, vw, canvasH);
 
@@ -6792,7 +6853,7 @@
 
             let mwCx = 0, mwCy = 0, mwMaxR = 1;
             if (waveOn) {
-              let xMn = Infinity, xMx = -Infinity, yMn = Infinity, yMax = -Infinity;
+              let xMn = Infinity, xMx = -Infinity, yMn = Infinity, yMx = -Infinity;
               for (let i = 0; i < vis; i++) {
                 const c = cmds[i];
                 if (c.x !== undefined) { if (c.x < xMn) xMn = c.x; if (c.x > xMx) xMx = c.x; if (c.y < yMn) yMn = c.y; if (c.y > yMx) yMx = c.y; }
@@ -6908,7 +6969,7 @@
             const mVtxAlpha = fadeEnabled ? Math.max(0, 1 - fadeT) : 1;
 
             // Get previous character for optical kerning
-            const prevChar = gi > 0 && dl.chars[gi - 1] ? dl.chars[gi - 1].char : null;
+            const prevChar = gi > 0 && lineChars[gi - 1] ? lineChars[gi - 1].char : null;
             const currentChar = charObj ? charObj.char : null;
 
             // Apply kerning based on mode
@@ -6997,6 +7058,7 @@
         const ch = key.toLowerCase();
         const newChar = initCharObj({ char: ch, id: mCharId++, done: false, kerning: 0, fontSize: mFontSize });
         tagMobileTyping(newChar);
+        if (typeof randomizeColors === 'function') randomizeColors();
         mTextData[0].splice(mCursorCol, 0, newChar);
         mCursorCol++;
         triggerCharFlash(newChar);
@@ -7197,8 +7259,7 @@
       }, { passive: true });
 
       mCanvas.addEventListener('click', () => {
-        const showing = grid.classList.toggle('visible');
-        if (showing && mMsgActive) {
+        if (mMsgActive) {
           mMsgStop();
           mTextData[0].length = 0;
           mCursorCol = 0;
@@ -7208,9 +7269,17 @@
         }
       });
 
-      grid.addEventListener('click', (e) => {
+      grid.addEventListener('touchend', () => {
         unlockSpeech();
+        try { const ac = getDrumCtx(); if (ac.state === 'suspended') ac.resume(); } catch (err) {}
+      }, { passive: true });
+
+      grid.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        unlockSpeech();
+        try { const ac = getDrumCtx(); if (ac.state === 'suspended') ac.resume(); } catch (err) {}
         const el = e.target.closest('.grid-cell');
+        if (el) flashCell(el);
         if (!el) return;
         const key = el.dataset.key;
         if (key === '⌫') { mBackspace(); }
