@@ -6495,7 +6495,7 @@
       const mCtx = mCanvas.getContext('2d');
       const grid = document.getElementById('letterGrid');
 
-      const PADS = 'abcdefghijklmnopqrstuvwxyz'.split('').concat(['␣', '⌫']);
+      const PADS = 'qwertyuiopasdfghjklzxcvbnm'.split('').concat(['␣', '⌫']);
       grid.classList.add('visible', 'pads');
       PADS.forEach(item => {
         const cell = document.createElement('div');
