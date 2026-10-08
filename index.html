@@ -6550,6 +6550,9 @@
 
       mTextData = [[]];
       let mCursorCol = 0;
+      let mScrollY = 0;
+      let mMaxScroll = 0;
+      let mFollow = true;
       let mCharId = 0;
       const mAnimations = new Map();
       let mAnimFrame = null;
@@ -6790,11 +6793,8 @@
           return rows;
         }
 
+        // Keep the type size fixed; long text wraps into more rows and the canvas scrolls
         let displayRows = calcRows(fs);
-        while (displayRows.length > maxRows && fs > 20) {
-          fs *= 0.85;
-          displayRows = calcRows(fs);
-        }
 
         const scale = fs / font.unitsPerEm;
         const asc = font.ascender * scale;
@@ -6805,7 +6805,11 @@
         const lineH = (asc + desc + 4) * 0.8;
 
         const totalH = displayRows.length * lineH;
-        const startY = Math.max(mPadding, (canvasH - totalH) / 2);
+        const maxScroll = Math.max(0, totalH + Math.max(0, asc + desc - lineH) + mPadding * 2 - canvasH);
+        if (mFollow) mScrollY = maxScroll;
+        mScrollY = Math.max(0, Math.min(maxScroll, mScrollY));
+        mMaxScroll = maxScroll;
+        const startY = maxScroll > 0 ? mPadding - mScrollY : Math.max(mPadding, (canvasH - totalH) / 2);
 
         for (let ri = 0; ri < displayRows.length; ri++) {
           const row = displayRows[ri];
@@ -7084,6 +7088,7 @@
         const ch = key.toLowerCase();
         const newChar = initCharObj({ char: ch, id: mCharId++, done: false, kerning: 0, fontSize: mFontSize });
         tagMobileTyping(newChar);
+        mFollow = true;
         if (typeof randomizeColors === 'function') randomizeColors();
         mTextData[0].splice(mCursorCol, 0, newChar);
         mCursorCol++;
@@ -7282,6 +7287,27 @@
           const el = document.elementFromPoint(touch.clientX, touch.clientY);
           if (el && el.classList.contains('grid-cell')) flashCell(el);
         }
+      }, { passive: true });
+
+      let mTouchY = null;
+      mCanvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) mTouchY = e.touches[0].clientY;
+      }, { passive: true });
+      mCanvas.addEventListener('touchmove', (e) => {
+        if (mTouchY === null || mMaxScroll <= 0) return;
+        e.preventDefault();
+        const y = e.touches[0].clientY;
+        mScrollY += mTouchY - y;
+        mTouchY = y;
+        mFollow = mScrollY >= mMaxScroll - 2;
+        mSchedule();
+      }, { passive: false });
+      mCanvas.addEventListener('touchend', () => { mTouchY = null; }, { passive: true });
+      mCanvas.addEventListener('wheel', (e) => {
+        if (mMaxScroll <= 0) return;
+        mScrollY += e.deltaY;
+        mFollow = mScrollY >= mMaxScroll - 2;
+        mSchedule();
       }, { passive: true });
 
       mCanvas.addEventListener('click', () => {
